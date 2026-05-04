@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Email | IGIT Connect</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/js/theme.js" defer></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e8eaf6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+        .glow {
+            position: fixed;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .glow-1 { background: rgba(102, 126, 234, 0.4); top: -150px; right: -150px; }
+        .glow-2 { background: rgba(240, 147, 251, 0.3); bottom: -150px; left: -150px; }
+
+        .top-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+        }
+        .top-bar a.back {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .top-bar a.back:hover { color: #fff; }
+
+        .wrapper {
+            position: relative;
+            z-index: 5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px 20px 40px;
+        }
+        .verify-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 35px;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.6s ease;
+            text-align: center;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .verify-container h2 {
+            font-size: 2rem;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #fff 0%, #b8c5ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .email-badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            padding: 6px 16px;
+            color: #b8c5ff;
+            font-weight: bold;
+            font-size: 0.92rem;
+            margin-bottom: 24px;
+        }
+
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0 10px;
+        }
+        .otp-inputs input {
+            width: 52px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s;
+            caret-color: #667eea;
+        }
+        .otp-inputs input:focus {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.08);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        .otp-inputs input.filled {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.12);
+        }
+
+        .timer {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin: 12px 0 20px;
+        }
+        .timer strong { color: #f093fb; }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 10px 16px;
+            color: #fca5a5;
+            font-size: 0.88rem;
+            margin-bottom: 16px;
+            animation: shake 0.4s ease;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-4px); }
+        }
+
+        .verify-container button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        .verify-container button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5);
+        }
+        .verify-container button[type="submit"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .resend-row {
+            margin-top: 18px;
+            font-size: 0.88rem;
+            color: #94a3b8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .resend-row form { display: inline-flex; }
+        /* Override: a small ghost-pill, NOT the giant gradient submit style */
+        .verify-container .resend-row button {
+            width: auto;
+            margin: 0;
+            padding: 6px 14px;
+            background: rgba(102, 126, 234, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.35);
+            border-radius: 20px;
+            color: #b8c5ff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: none;
+            transition: all 0.2s;
+            -webkit-text-fill-color: initial;
+            background-clip: border-box;
+            -webkit-background-clip: border-box;
+        }
+        .verify-container .resend-row button:hover:not(:disabled) {
+            background: rgba(102, 126, 234, 0.18);
+            color: #fff;
+            transform: none;
+        }
+        .verify-container .resend-row button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .back-link {
+            margin-top: 18px;
+            font-size: 0.88rem;
+            color: #94a3b8;
+        }
+        .back-link a {
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        .back-link a:hover { opacity: 0.8; }
+
+        /* Spinner inside button */
+        .spinner {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="top-bar">
+    <a href="/" class="logo">🎓 IGIT Connect</a>
+    <a href="/register" class="back">← Back to register</a>
+</div>
+
+<div class="wrapper">
+    <div class="verify-container">
+        <h2>Verify Email</h2>
+        <p class="subtitle">We've sent a 6-digit code to</p>
+        <div class="email-badge"><%= email %></div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="error-msg">⚠️ <%= error %></div>
+        <% } %>
+
+        <form method="POST" action="/verify-otp" id="otpForm">
+            <input type="hidden" name="email" value="<%= email %>">
+            <input type="hidden" name="password" value="<%= password %>">
+            <input type="hidden" name="role" value="<%= role %>">
+            <input type="hidden" name="fullName" value="<%= fullName %>">
+            <input type="hidden" name="otp" id="otpHidden" value="">
+
+            <div class="otp-inputs" id="otpInputs">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" autofocus>
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+            </div>
+
+            <div class="timer" id="timerText">
+                Code expires in <strong id="countdown">5:00</strong>
+            </div>
+
+            <button type="submit" id="verifyBtn" disabled>Verify & Create Account →</button>
+        </form>
+
+        <div class="resend-row">
+            Didn't get the code?
+            <form method="POST" action="/resend-otp" style="display:inline;">
+                <input type="hidden" name="email" value="<%= email %>">
+                <input type="hidden" name="password" value="<%= password %>">
+                <input type="hidden" name="role" value="<%= role %>">
+                <input type="hidden" name="fullName" value="<%= fullName %>">
+                <button type="submit" id="resendBtn">Resend OTP</button>
+            </form>
+        </div>
+
+        <p class="back-link">
+            Wrong email? <a href="/register">Start over</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    /* ===== OTP input UX ===== */
+    (function() {
+        const inputs = document.querySelectorAll('#otpInputs input');
+        const hidden = document.getElementById('otpHidden');
+        const btn = document.getElementById('verifyBtn');
+
+        function collectOTP() {
+            let otp = '';
+            inputs.forEach(i => otp += i.value);
+            hidden.value = otp;
+            btn.disabled = otp.length < 6;
+            inputs.forEach(i => i.classList.toggle('filled', i.value.length > 0));
+        }
+
+        inputs.forEach((inp, idx) => {
+            inp.addEventListener('input', (e) => {
+                // Only allow digits
+                inp.value = inp.value.replace(/[^0-9]/g, '');
+                if (inp.value && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                }
+                collectOTP();
+            });
+
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !inp.value && idx > 0) {
+                    inputs[idx - 1].focus();
+                    inputs[idx - 1].value = '';
+                    collectOTP();
+                }
+                // Arrow keys
+                if (e.key === 'ArrowLeft' && idx > 0) inputs[idx - 1].focus();
+                if (e.key === 'ArrowRight' && idx < inputs.length - 1) inputs[idx + 1].focus();
+            });
+
+            // Handle paste
+            inp.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+                for (let i = 0; i < paste.length && i + idx < inputs.length; i++) {
+                    inputs[idx + i].value = paste[i];
+                }
+                const next = Math.min(idx + paste.length, inputs.length - 1);
+                inputs[next].focus();
+                collectOTP();
+            });
+
+            inp.addEventListener('focus', () => inp.select());
+        });
+
+        /* ===== Countdown timer ===== */
+        let remaining = 5 * 60; // 5 minutes in seconds
+        const countdownEl = document.getElementById('countdown');
+        const timerText = document.getElementById('timerText');
+        const interval = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(interval);
+                timerText.innerHTML = '<strong style="color:#ef4444;">Code has expired.</strong> Please resend.';
+                btn.disabled = true;
+                return;
+            }
+            const min = Math.floor(remaining / 60);
+            const sec = remaining % 60;
+            countdownEl.textContent = min + ':' + (sec < 10 ? '0' : '') + sec;
+        }, 1000);
+
+        /* ===== Submit spinner ===== */
+        document.getElementById('otpForm').addEventListener('submit', function() {
+            btn.innerHTML = '<span class="spinner"></span> Verifying...';
+            btn.disabled = true;
+        });
+    })();
+</script>
+
+<!-- Three.js background -->
+<script>
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    const particleCount = 800;
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 25;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 25;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 25;
+        const m = Math.random();
+        colors[i * 3] = 0.4 + m * 0.6;
+        colors[i * 3 + 1] = 0.5 + m * 0.4;
+        colors[i * 3 + 2] = 0.9;
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const points = new THREE.Points(geom, new THREE.PointsMaterial({
+        size: 0.04, vertexColors: true, transparent: true, opacity: 0.7
+    }));
+    scene.add(points);
+    if (window.IGITTheme) window.IGITTheme.bind(points);
+
+    const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.5, 24, 24),
+        new THREE.MeshBasicMaterial({ color: 0xf093fb, wireframe: true, transparent: true, opacity: 0.15 })
+    );
+    sphere.position.set(5, -2, -3);
+    scene.add(sphere);
+    if (window.IGITTheme) window.IGITTheme.bindMesh(sphere, { dark: 0xf093fb, light: 0xdb2777 }, { dark: 0.15, light: 0.18 });
+
+    camera.position.z = 6;
+
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0008;
+        points.rotation.x += 0.0003;
+        sphere.rotation.x += 0.003;
+        sphere.rotation.y += 0.004;
+        camera.position.x += (mouseX * 0.3 - camera.position.x) * 0.04;
+        camera.position.y += (mouseY * 0.3 - camera.position.y) * 0.04;
+        camera.lookAt(scene.position);
+        renderer.render(scene, camera);
+    }
+    animate();
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+</body>
+</html>

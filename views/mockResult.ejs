@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Result | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .result-card {
+      max-width: 640px;
+      margin: 50px auto 30px;
+      padding: 44px 40px;
+      text-align: center;
+      animation: fadeInUp 0.6s ease;
+    }
+    .result-icon { font-size: 4.4rem; margin-bottom: 14px; animation: bounce 1.5s ease-in-out; }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .result-card h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #fff, #b8c5ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 6px;
+    }
+    .test-name { color: #94a3b8; margin-bottom: 18px; font-size: 0.95rem; }
+    .score-display {
+      font-size: 3.6rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1;
+      margin: 18px 0 6px;
+    }
+    .score-label { color: #94a3b8; font-size: 0.95rem; }
+    .percentage {
+      display: inline-block;
+      padding: 8px 22px;
+      border-radius: 25px;
+      font-weight: bold;
+      margin: 18px 0 24px;
+      font-size: 1.05rem;
+    }
+    .percentage.good { background: rgba(46, 213, 115, 0.15); color: #6fffaa; border: 1px solid rgba(46, 213, 115, 0.4); }
+    .percentage.ok   { background: rgba(255, 184, 0, 0.15); color: #ffd166; border: 1px solid rgba(255, 184, 0, 0.4); }
+    .percentage.low  { background: rgba(255, 107, 107, 0.15); color: #ff8a80; border: 1px solid rgba(255, 107, 107, 0.4); }
+
+    .meta-row {
+      display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;
+      color: #94a3b8; font-size: 0.92rem; margin-bottom: 20px;
+    }
+    .meta-row b { color: #b8c5ff; }
+
+    .breakdown {
+      max-width: 640px; margin: 0 auto 30px;
+      display: grid; gap: 14px;
+    }
+    .section-row {
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      display: grid;
+      grid-template-columns: 1fr 110px 90px;
+      gap: 16px; align-items: center;
+    }
+    .section-row .name { color: #fff; font-weight: 600; }
+    .section-row .bar  {
+      height: 8px; border-radius: 4px;
+      background: rgba(255,255,255,0.08); overflow: hidden;
+    }
+    .section-row .bar > span {
+      display: block; height: 100%;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+    }
+    .section-row .pct { text-align: right; color: #b8c5ff; font-weight: 700; font-size: 0.95rem; }
+
+    .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/landing" class="back">← Dashboard</a>
+</div>
+
+<div class="page-container">
+  <%
+    const pct = total ? Math.round((score / total) * 100) : 0;
+    let icon = '🎉', cls = 'good', msg = 'Great job!';
+    if (pct < 50) { icon = '📚'; cls = 'low'; msg = 'Keep practicing!'; }
+    else if (pct < 75) { icon = '👍'; cls = 'ok'; msg = 'Good effort!'; }
+
+    const mins = Math.floor((timeTakenSec || 0) / 60);
+    const secs = (timeTakenSec || 0) % 60;
+    const sectionNames = { aptitude: 'Aptitude', english: 'English Vocabulary', cseCore: 'CSE Core Subjects' };
+  %>
+
+  <div class="glass-card result-card">
+    <div class="result-icon"><%= icon %></div>
+    <h1>Test Complete</h1>
+    <% if (typeof test !== 'undefined' && test) { %>
+      <div class="test-name"><%= test.title %></div>
+    <% } %>
+    <div class="score-label">Your Score</div>
+    <div class="score-display"><%= score %> / <%= total %></div>
+    <div class="percentage <%= cls %>"><%= pct %>% — <%= msg %></div>
+
+    <div class="meta-row">
+      <span>⏱ Time taken: <b><%= mins %>m <%= secs %>s</b></span>
+      <% if (typeof test !== 'undefined' && test) { %>
+        <span>🎯 Difficulty: <b><%= test.difficulty.charAt(0).toUpperCase() + test.difficulty.slice(1) %></b></span>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (typeof breakdown !== 'undefined' && breakdown) { %>
+    <h2 style="text-align:center;color:#fff;font-size:1.15rem;margin: 0 0 14px;">📊 Section-wise Breakdown</h2>
+    <div class="breakdown">
+      <% Object.keys(breakdown).forEach(function (cat) {
+           const b = breakdown[cat];
+           const p = b.total ? Math.round((b.correct / b.total) * 100) : 0; %>
+        <div class="section-row">
+          <div class="name"><%= sectionNames[cat] || cat %> <span style="color:#94a3b8;font-weight:400;">(<%= b.correct %>/<%= b.total %>)</span></div>
+          <div class="bar"><span style="width: <%= p %>%"></span></div>
+          <div class="pct"><%= p %>%</div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <div class="actions">
+    <% if (typeof test !== 'undefined' && test) { %>
+      <a href="/mock-test/<%= test.id %>" class="btn-primary">Retake This Test</a>
+    <% } %>
+    <a href="/mock-test" class="btn-outline">All Mock Tests</a>
+    <a href="/landing" class="btn-outline">Dashboard</a>
+  </div>
+</div>
+
+</body>
+</html>

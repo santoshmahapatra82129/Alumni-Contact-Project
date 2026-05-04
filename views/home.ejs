@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IGIT Alumni Connect — Bridge Between Students & Alumni</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0e27;
+      color: #e8eaf6;
+      overflow-x: hidden;
+    }
+
+    /* ============ NAVBAR ============ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 18px 50px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      background: rgba(10, 14, 39, 0.7);
+      backdrop-filter: blur(15px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: bold;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .nav-links { display: flex; gap: 30px; align-items: center; }
+    .nav-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-btn {
+      padding: 9px 22px;
+      border-radius: 25px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .nav-btn.outline {
+      border: 1.5px solid #667eea;
+      color: #667eea !important;
+    }
+    .nav-btn.outline:hover {
+      background: #667eea;
+      color: #fff !important;
+    }
+    .nav-btn.solid {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff !important;
+    }
+    .nav-btn.solid:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* ============ HERO ============ */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    /* ===== Global fixed 3D world (single scene, scroll-scrubbed camera) ===== */
+    #three-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+    /* every content layer above the 3D world */
+    nav, .hero, section, footer, .scroll-progress { position: relative; z-index: 3; }
+    /* let the 3D world breathe through every section */
+    section { background: transparent !important; }
+    .stats { background: linear-gradient(180deg, rgba(10,14,39,0) 0%, rgba(13,19,48,0.55) 50%, rgba(10,14,39,0) 100%) !important; }
+    #how, #about { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) !important; }
+
+    /* ===== Top scroll-progress bar ===== */
+    .scroll-progress {
+      position: fixed; top: 0; left: 0;
+      height: 3px; width: 0%;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      box-shadow: 0 0 15px rgba(102,126,234,.7);
+      z-index: 200;
+      transition: width 0.05s linear;
+    }
+
+    /* ===== SaaS-style reveal primitives (initial state; GSAP animates them) ===== */
+    .reveal      { opacity: 0; transform: translateY(40px); will-change: transform, opacity; }
+    .reveal-stagger > *  { opacity: 0; transform: translateY(40px); will-change: transform, opacity; }
+    .reveal-scale { opacity: 0; transform: scale(0.92); will-change: transform, opacity; }
+
+    /* ===== Glass card upgrade for premium feel ===== */
+    .feature-card, .testimonial, .stat-card, .step {
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 0 20px;
+      max-width: 900px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(102, 126, 234, 0.15);
+      border: 1px solid rgba(102, 126, 234, 0.4);
+      padding: 6px 18px;
+      border-radius: 25px;
+      font-size: 0.85rem;
+      color: #b8c5ff;
+      margin-bottom: 25px;
+      animation: fadeInUp 0.8s ease;
+    }
+    .hero h1 {
+      font-size: 4rem;
+      line-height: 1.1;
+      margin-bottom: 25px;
+      background: linear-gradient(135deg, #fff 0%, #b8c5ff 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: fadeInUp 1s ease;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: #a0aec0;
+      margin-bottom: 40px;
+      animation: fadeInUp 1.2s ease;
+    }
+    .hero-cta { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; animation: fadeInUp 1.4s ease; }
+    .cta-primary, .cta-secondary {
+      padding: 14px 35px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: bold;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cta-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    .cta-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+    }
+    .cta-secondary {
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: #fff;
+      backdrop-filter: blur(10px);
+    }
+    .cta-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-3px);
+    }
+    .scroll-indicator {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.5);
+      animation: bounce 2s infinite;
+      z-index: 2;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(10px); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============ SECTIONS ============ */
+    section { padding: 100px 50px; position: relative; }
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .section-subtitle {
+      text-align: center;
+      color: #94a3b8;
+      max-width: 700px;
+      margin: 0 auto 60px;
+      font-size: 1.05rem;
+    }
+
+    /* ============ STATS ============ */
+    .stats {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .stats-grid {
+      max-width: 1100px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .stat-label { color: #94a3b8; margin-top: 8px; }
+
+    /* ============ FEATURES ============ */
+    .features-grid {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 35px 28px;
+      border-radius: 16px;
+      transition: all 0.4s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+      transition: left 0.6s;
+    }
+    .feature-card:hover::before { left: 100%; }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 18px;
+      display: inline-block;
+    }
+    .feature-card h3 { color: #fff; margin-bottom: 12px; font-size: 1.25rem; }
+    .feature-card p { color: #94a3b8; font-size: 0.95rem; line-height: 1.6; }
+
+    /* ============ HOW IT WORKS ============ */
+    .how-grid {
+      max-width: 1100px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+    }
+    .step {
+      text-align: center;
+      padding: 25px;
+    }
+    .step-num {
+      width: 60px; height: 60px;
+      margin: 0 auto 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    .step h4 { color: #fff; margin-bottom: 8px; }
+    .step p { color: #94a3b8; font-size: 0.9rem; }
+
+    /* ============ TESTIMONIALS ============ */
+    .testimonials-grid {
+      max-width: 1100px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+    }
+    .testimonial {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 28px;
+      border-radius: 14px;
+      position: relative;
+    }
+    .testimonial::before {
+      content: '"';
+      position: absolute;
+      top: -10px; left: 18px;
+      font-size: 4rem;
+      color: rgba(102, 126, 234, 0.3);
+      font-family: serif;
+    }
+    .testimonial p { color: #cbd5e1; font-style: italic; margin-bottom: 20px; line-height: 1.6; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 45px; height: 45px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+    }
+    .author-info strong { color: #fff; display: block; font-size: 0.95rem; }
+    .author-info span { color: #94a3b8; font-size: 0.8rem; }
+
+    /* ============ ABOUT ============ */
+    .about-content {
+      max-width: 1000px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .about-text p { color: #cbd5e1; line-height: 1.8; margin-bottom: 18px; }
+    .about-image {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .about-image img.campus {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    /* ============ CTA SECTION ============ */
+    .final-cta {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.15));
+      padding: 80px 30px;
+      border-radius: 24px;
+      max-width: 900px;
+      margin: 50px auto;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .final-cta h2 { font-size: 2.2rem; color: #fff; margin-bottom: 15px; }
+    .final-cta p { color: #cbd5e1; margin-bottom: 30px; }
+
+    /* ============ FOOTER ============ */
+    footer {
+      background: #060920;
+      padding: 60px 50px 25px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .footer-grid {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 35px;
+    }
+    .footer-col h4 { color: #fff; margin-bottom: 18px; font-size: 1rem; }
+    .footer-col p, .footer-col a {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      display: block;
+      text-decoration: none;
+      line-height: 1.6;
+    }
+    .footer-col a:hover { color: #667eea; }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 20px;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links a:not(.nav-btn) { display: none; }
+      .hero h1 { font-size: 2.5rem; }
+      section { padding: 60px 20px; }
+      .about-content { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============ NAVBAR ============ -->
+<nav>
+  <div class="logo">🎓 IGIT Connect</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#about">About</a>
+    <a href="/login" class="nav-btn outline">Login</a>
+    <a href="/register" class="nav-btn solid">Register</a>
+  </div>
+</nav>
+
+<!-- ============ GLOBAL 3D WORLD + SCROLL PROGRESS ============ -->
+<canvas id="three-canvas"></canvas>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge reveal">✨ Built for IGIT Sarang students & alumni</div>
+    <h1 class="reveal">Connect. Learn.<br>Get Placed.</h1>
+    <p class="reveal">The official platform bridging current students with alumni — share interview experiences, practice mock tests, build resumes, and unlock career opportunities.</p>
+    <div class="hero-cta reveal">
+      <a href="/register" class="cta-primary">Get Started Free →</a>
+      <a href="/login" class="cta-secondary">I have an account</a>
+    </div>
+  </div>
+  <div class="scroll-indicator">↓ Scroll to explore</div>
+</div>
+
+<!-- ============ STATS ============ -->
+<section class="stats">
+  <div class="stats-grid reveal-stagger">
+    <div>
+      <div class="stat-num" data-count="500">0</div>
+      <div class="stat-label">Active Students</div>
+    </div>
+    <div>
+      <div class="stat-num" data-count="120">0</div>
+      <div class="stat-label">Alumni Network</div>
+    </div>
+    <div>
+      <div class="stat-num" data-count="11">0</div>
+      <div class="stat-label">Companies Tracked</div>
+    </div>
+    <div>
+      <div class="stat-num" data-count="250">0</div>
+      <div class="stat-label">Interview Experiences</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section id="features">
+  <h2 class="section-title reveal">Everything You Need for Placements</h2>
+  <p class="section-subtitle reveal">A single platform with all the tools to ace campus recruitment, from preparation to landing the offer.</p>
+  <div class="features-grid reveal-stagger">
+    <div class="feature-card">
+      <div class="feature-icon">🏢</div>
+      <h3>Company Insights</h3>
+      <p>Browse companies that visited campus. See eligibility, interview rounds, and alumni POCs for each.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📝</div>
+      <h3>Interview Experiences</h3>
+      <p>Read first-hand interview accounts from seniors. Learn what to expect and how to prepare.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧪</div>
+      <h3>Mock Aptitude Tests</h3>
+      <p>Practice with 10+ aptitude questions covering quant, reasoning, and verbal. Auto-graded.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📄</div>
+      <h3>Resume Templates</h3>
+      <p>10 ATS-friendly LaTeX resume templates. One-click copy or download as .tex file.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📚</div>
+      <h3>Learning Resources</h3>
+      <p>Curated DSA, aptitude, and mock interview prep material in one organized place.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤝</div>
+      <h3>Alumni Network</h3>
+      <p>Direct contact with alumni working at top companies. Get referrals and career advice.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how">
+  <h2 class="section-title reveal">How It Works</h2>
+  <p class="section-subtitle reveal">Three simple steps to start your placement journey.</p>
+  <div class="how-grid reveal-stagger">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h4>Register</h4>
+      <p>Sign up as a Student or Alumni in under 30 seconds.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h4>Explore</h4>
+      <p>Browse companies, read experiences, take mock tests, build your resume.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h4>Connect</h4>
+      <p>Reach out to alumni, share your own experiences, and grow your network.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section>
+  <h2 class="section-title reveal">Loved by IGIT-ians</h2>
+  <p class="section-subtitle reveal">Hear from students and alumni who used the platform.</p>
+  <div class="testimonials-grid reveal-stagger">
+    <div class="testimonial">
+      <p>The interview experiences section was a goldmine. I knew exactly what to expect at IBM and cleared my interview in one shot.</p>
+      <div class="testimonial-author">
+        <div class="avatar">RK</div>
+        <div class="author-info"><strong>Ravi Kumar</strong><span>SDE @ IBM, Batch 2024</span></div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <p>Loved the resume templates. As a fresher, I had no idea where to start with LaTeX and IGIT Connect made it ridiculously easy.</p>
+      <div class="testimonial-author">
+        <div class="avatar">PJ</div>
+        <div class="author-info"><strong>Pooja Jain</strong><span>Software Engineer @ JSW</span></div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <p>Being able to give back as alumni — sharing my interview rounds with juniors — has been incredibly rewarding. Great initiative!</p>
+      <div class="testimonial-author">
+        <div class="avatar">VS</div>
+        <div class="author-info"><strong>Vikram Singh</strong><span>Engineer @ RIL, Batch 2020</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section id="about">
+  <div class="about-content reveal-stagger">
+    <div class="about-text">
+      <h2 class="section-title" style="text-align: left;">About IGIT Sarang</h2>
+      <p>Indira Gandhi Institute of Technology, Sarang is a premier engineering institute in Odisha, established in 1982 and known for academic excellence and industry-ready graduates.</p>
+      <p>This platform is a student-driven initiative to formalize the way knowledge flows between batches — turning years of accumulated placement wisdom into a searchable, organized resource for every IGIT-ian.</p>
+      <p>Built by students. For students. With love. ❤️</p>
+    </div>
+    <div class="about-image">
+      <img class="campus" src="/images/igit-campus.jpeg" alt="IGIT Sarang campus — central dome building">
+      <h3 style="color: #fff; margin-top: 18px;">IGIT Sarang</h3>
+      <p style="color: #94a3b8; margin-top: 8px;">Established 1982<br>Sarang, Odisha, India</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section>
+  <div class="final-cta reveal-scale">
+    <h2>Ready to Get Started?</h2>
+    <p>Join hundreds of students and alumni already on the platform.</p>
+    <div class="hero-cta">
+      <a href="/register" class="cta-primary">Create Free Account</a>
+      <a href="/login" class="cta-secondary">Sign In</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <h4>🎓 IGIT Connect</h4>
+      <p>Bridging the gap between students and alumni at IGIT Sarang. Built as a minor project, used by hundreds of IGIT-ians for placement preparation.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="/companies">Companies</a>
+      <a href="/mock-test">Mock Test</a>
+      <a href="/resources">Resources</a>
+      <a href="/resources/resume">Resume Builder</a>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <a href="/register">Register</a>
+      <a href="/login">Login</a>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <a>📧 connect@igitsarang.ac.in</a>
+      <a>📞 +91-XXX-XXX-XXXX</a>
+      <a>📍 Sarang, Odisha 759146</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2026 IGIT Connect — A student-built platform for IGIT Sarang. All rights reserved.
+  </div>
+</footer>
+
+<script src="/js/theme.js"></script>
+
+<!-- ====================================================================
+     LANDING PAGE — SaaS-grade scroll-driven 3D + reveal animations
+     ==================================================================== -->
+<script>
+(function () {
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ---------- THREE.JS WORLD ----------
+  const canvas = document.getElementById('three-canvas');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0a0e27, 0.022);
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 0, 8);
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const TAU = Math.PI * 2;
+  const wireMat = (c, op = 0.55) => new THREE.MeshBasicMaterial({ color: c, wireframe: true, transparent: true, opacity: op });
+
+  // ---------- BACKDROP STARFIELD ----------
+  let starfield;
+  (() => {
+    const N = 1500;
+    const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      pos[i*3]   = (Math.random() - 0.5) * 120;
+      pos[i*3+1] = (Math.random() - 0.5) * 80;
+      pos[i*3+2] = (Math.random() - 0.5) * 100;
+      const m = Math.random();
+      col[i*3]=0.5+m*0.5; col[i*3+1]=0.55+m*0.4; col[i*3+2]=0.95;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    starfield = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.06, vertexColors: true, transparent: true, opacity: 0.85 }));
+    scene.add(starfield);
+  })();
+
+  // ---------- STAGES ----------
+  const stages = [];
+  const STEP = 30;
+  function add(stage) { stage.group.position.set(stage.x, 0, 0); scene.add(stage.group); stages.push(stage); }
+
+  // 0) HERO
+  (() => {
+    const g = new THREE.Group();
+    const sphere = new THREE.Mesh(new THREE.SphereGeometry(2.5, 32, 32), wireMat(0x667eea, 0.45));
+    const inner  = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 16), wireMat(0xf093fb, 0.30));
+    g.add(sphere); g.add(inner);
+    const rings = new THREE.Group();
+    for (let i = 0; i < 3; i++) {
+      const t = new THREE.Mesh(new THREE.TorusGeometry(3.5 + i * 0.7, 0.025, 8, 80),
+        new THREE.MeshBasicMaterial({ color: i % 2 ? 0xf093fb : 0x667eea, transparent: true, opacity: 0.45 }));
+      t.rotation.x = Math.random() * Math.PI; t.rotation.y = Math.random() * Math.PI;
+      rings.add(t);
+    }
+    g.add(rings);
+    add({ key:'hero', group:g, x:0, tick(t){
+      sphere.rotation.x += 0.002; sphere.rotation.y += 0.003;
+      inner.rotation.x  -= 0.004; inner.rotation.y  -= 0.003;
+      rings.rotation.x += 0.001; rings.rotation.y += 0.002;
+      rings.children.forEach((r, i) => { r.rotation.z += 0.005 * (i + 1); });
+    }});
+  })();
+
+  // 1) STATS — 3x3 icosahedra
+  (() => {
+    const g = new THREE.Group();
+    const mat = wireMat(0x667eea, 0.5);
+    const cells = [];
+    for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) {
+      const m = new THREE.Mesh(new THREE.IcosahedronGeometry(0.85, 0), mat);
+      m.position.set(x * 2.4, y * 1.7, 0);
+      g.add(m); cells.push(m);
+    }
+    add({ key:'stats', group:g, x:STEP*1, tick(t){
+      g.rotation.y = t * 0.0003;
+      cells.forEach((m, i) => { m.rotation.x = t * 0.0008 + i; m.rotation.y = t * 0.0011 + i; });
+    }});
+  })();
+
+  // 2) FEATURES — orbiting platonic solids
+  (() => {
+    const g = new THREE.Group();
+    const palette = [0x667eea, 0xf093fb, 0x764ba2, 0x4fd1c5, 0xfbbf24, 0xec4899];
+    const geoms = [
+      new THREE.BoxGeometry(1.3,1.3,1.3),
+      new THREE.TetrahedronGeometry(1.1),
+      new THREE.OctahedronGeometry(1.1),
+      new THREE.TorusKnotGeometry(0.7, 0.22, 64, 8),
+      new THREE.DodecahedronGeometry(1),
+      new THREE.TorusGeometry(0.95, 0.22, 8, 32),
+    ];
+    const meshes = [];
+    geoms.forEach((geo, i) => {
+      const m = new THREE.Mesh(geo, wireMat(palette[i], 0.6));
+      m.userData.a = (i / geoms.length) * TAU; m.userData.r = 4.8;
+      g.add(m); meshes.push(m);
+    });
+    add({ key:'features', group:g, x:STEP*2, tick(t){
+      meshes.forEach((m, i) => {
+        const a = m.userData.a + t * 0.00035;
+        m.position.x = Math.cos(a) * m.userData.r;
+        m.position.z = Math.sin(a) * 1.6;
+        m.position.y = Math.sin(a * 1.4 + i) * 1.5;
+        m.rotation.x = t * 0.0009 + i; m.rotation.y = t * 0.0012 + i;
+      });
+    }});
+  })();
+
+  // 3) HOW — node network
+  (() => {
+    const g = new THREE.Group();
+    const N = 70, pts = [];
+    for (let i = 0; i < N; i++) pts.push(new THREE.Vector3((Math.random()-0.5)*9, (Math.random()-0.5)*5.5, (Math.random()-0.5)*5));
+    const pGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const points = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xb8c5ff, size: 0.10, transparent: true, opacity: 0.9 }));
+    g.add(points);
+    const lp = [];
+    for (let i = 0; i < N; i++) for (let j = i+1; j < N; j++)
+      if (pts[i].distanceTo(pts[j]) < 2.4) lp.push(pts[i].x, pts[i].y, pts[i].z, pts[j].x, pts[j].y, pts[j].z);
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    g.add(new THREE.LineSegments(lGeo, new THREE.LineBasicMaterial({ color: 0x667eea, transparent: true, opacity: 0.28 })));
+    add({ key:'how', group:g, x:STEP*3, tick(t){ g.rotation.y = t * 0.0003; g.rotation.x = Math.sin(t*0.0002)*0.25; }});
+  })();
+
+  // 4) TESTIMONIALS — wave plane
+  (() => {
+    const g = new THREE.Group();
+    const geo = new THREE.PlaneGeometry(14, 9, 50, 30);
+    const plane = new THREE.Mesh(geo, wireMat(0xf093fb, 0.5));
+    plane.rotation.x = -Math.PI / 2.3; plane.position.y = -0.5;
+    g.add(plane);
+    const base = geo.attributes.position.array.slice();
+    add({ key:'testimonials', group:g, x:STEP*4, tick(t){
+      const p = geo.attributes.position.array;
+      for (let i = 0; i < p.length; i += 3) {
+        const x = base[i], y = base[i+1];
+        p[i+2] = Math.sin(x * 0.7 + t*0.001) * 0.45 + Math.cos(y * 0.7 + t*0.0013) * 0.45;
+      }
+      geo.attributes.position.needsUpdate = true;
+      plane.rotation.z = Math.sin(t*0.0002) * 0.08;
+    }});
+  })();
+
+  // 5) ABOUT — globe + crossed rings
+  (() => {
+    const g = new THREE.Group();
+    const globe = new THREE.Mesh(new THREE.SphereGeometry(2, 24, 16), wireMat(0x667eea, 0.55));
+    const ringA = new THREE.Mesh(new THREE.TorusGeometry(2.9, 0.04, 8, 80),
+      new THREE.MeshBasicMaterial({ color: 0xf093fb, transparent: true, opacity: 0.7 }));
+    ringA.rotation.x = Math.PI / 3;
+    const ringB = ringA.clone();
+    ringB.rotation.x = -Math.PI / 3; ringB.material = ringA.material.clone(); ringB.material.color.setHex(0xb8c5ff);
+    g.add(globe); g.add(ringA); g.add(ringB);
+    add({ key:'about', group:g, x:STEP*5, tick(t){
+      globe.rotation.y = t * 0.0005; globe.rotation.x = t * 0.0002;
+      ringA.rotation.z = t * 0.0006; ringB.rotation.z = -t * 0.0008;
+    }});
+  })();
+
+  // 6) CTA — particle vortex
+  (() => {
+    const g = new THREE.Group();
+    const N = 1200;
+    const pos = new Float32Array(N*3), col = new Float32Array(N*3);
+    for (let i = 0; i < N; i++) {
+      const r = 1 + Math.random() * 4.2;
+      const a = Math.random() * TAU;
+      pos[i*3] = Math.cos(a)*r; pos[i*3+1] = (Math.random()-0.5)*7; pos[i*3+2] = Math.sin(a)*r;
+      const m = Math.random();
+      col[i*3]=0.4+m*0.6; col[i*3+1]=0.5+m*0.3; col[i*3+2]=0.95;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const points = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.06, vertexColors: true, transparent: true, opacity: 0.85 }));
+    g.add(points);
+    add({ key:'cta', group:g, x:STEP*6, tick(t){ points.rotation.y = t * 0.0009; points.rotation.x = Math.sin(t*0.0003)*0.2; }});
+  })();
+
+  // ---------- CAMERA SCROLL SCRUB ----------
+  const camTarget = { x: 0, y: 0, z: 8 };
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  const scrollState = { p: 0 };
+  ScrollTrigger.create({
+    trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.6,
+    onUpdate: (self) => {
+      scrollState.p = self.progress;
+      const bar = document.getElementById('scrollProgress');
+      if (bar) bar.style.width = (self.progress * 100) + '%';
+    },
+  });
+
+  function animate(t) {
+    requestAnimationFrame(animate);
+    const last = stages[stages.length - 1].x;
+    const targetX = scrollState.p * last;
+    const phase = scrollState.p * (stages.length - 1);
+    const seg = phase - Math.floor(phase);
+    const dip = Math.sin(seg * Math.PI) * 1.4;
+
+    camTarget.x = targetX + mouseX * 0.4;
+    camTarget.y = Math.sin(scrollState.p * Math.PI * 2) * 0.6 + mouseY * 0.3;
+    camTarget.z = 8 - dip;
+
+    camera.position.x += (camTarget.x - camera.position.x) * 0.08;
+    camera.position.y += (camTarget.y - camera.position.y) * 0.08;
+    camera.position.z += (camTarget.z - camera.position.z) * 0.08;
+
+    const focusIndex = Math.round(scrollState.p * (stages.length - 1));
+    const focus = stages[Math.max(0, Math.min(stages.length - 1, focusIndex))];
+    camera.lookAt(focus.group.position.x, 0, 0);
+
+    if (starfield) starfield.rotation.y = t * 0.00005;
+    stages.forEach(s => s.tick(t));
+    renderer.render(scene, camera);
+  }
+  requestAnimationFrame(animate);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    ScrollTrigger.refresh();
+  });
+
+  // ---------- REVEAL ANIMATIONS ----------
+  gsap.utils.toArray('.reveal').forEach(el => {
+    gsap.to(el, { opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' } });
+  });
+  gsap.utils.toArray('.reveal-stagger').forEach(parent => {
+    gsap.to(parent.children, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12,
+      scrollTrigger: { trigger: parent, start: 'top 80%', toggleActions: 'play none none reverse' } });
+  });
+  gsap.utils.toArray('.reveal-scale').forEach(el => {
+    gsap.to(el, { opacity: 1, scale: 1, duration: 1.1, ease: 'power3.out',
+      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' } });
+  });
+
+  // ---------- ANIMATED STAT COUNTERS ----------
+  document.querySelectorAll('.stat-num').forEach(el => {
+    const target = parseInt(el.dataset.count, 10) || 0;
+    const obj = { v: 0 };
+    gsap.to(obj, { v: target, duration: 1.8, ease: 'power2.out',
+      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' },
+      onUpdate: () => { el.textContent = Math.round(obj.v) + (target >= 100 ? '+' : ''); } });
+  });
+})();
+</script>
+
+</body>
+</html>

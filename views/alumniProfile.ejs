@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Alumni Profile | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    @media (max-width: 900px) { .profile-layout { grid-template-columns: 1fr; } }
+
+    .header-card {
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      animation: fadeInUp 0.5s ease;
+      position: relative;
+      overflow: hidden;
+      grid-column: 1 / -1;
+    }
+    .header-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 300px; height: 100%;
+      background: radial-gradient(circle at 100% 0%, rgba(240, 147, 251, 0.18), transparent 60%);
+      pointer-events: none;
+    }
+    [data-theme="light"] .header-card::before {
+      background: radial-gradient(circle at 100% 0%, rgba(219, 39, 119, 0.10), transparent 60%);
+    }
+
+    .avatar {
+      width: 80px; height: 80px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 10px 30px rgba(240, 147, 251, 0.4);
+      letter-spacing: -1px;
+    }
+
+    .header-info { flex: 1; min-width: 0; }
+    .header-info .name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+    .header-info h1 { font-size: 1.7rem; color: var(--text); margin: 0; }
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(240, 147, 251, 0.15);
+      color: #f8b9ff;
+      border: 1px solid rgba(240, 147, 251, 0.35);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+    [data-theme="light"] .role-badge {
+      background: #fdf2f8;
+      color: #be185d;
+      border-color: #fbcfe8;
+    }
+    .header-info .email { color: var(--text-muted); font-size: 0.92rem; }
+    .header-info .current-role {
+      color: var(--text-2);
+      font-size: 0.95rem;
+      margin-top: 6px;
+    }
+    .header-info .current-role strong { color: var(--text); }
+
+    .completion-card { padding: 22px 24px; animation: fadeInUp 0.5s 0.1s ease backwards; }
+    .completion-card .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .completion-card .label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .completion-card .pct { font-size: 1.5rem; font-weight: bold; color: var(--text); }
+    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+    [data-theme="light"] .progress-bar { background: #f1f5f9; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f093fb, #f5576c);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .completion-card .hint { font-size: 0.82rem; color: var(--text-muted); margin-top: 10px; }
+
+    .form-section { padding: 26px 30px; animation: fadeInUp 0.5s 0.15s ease backwards; }
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .section-head .icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgba(240, 147, 251, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    [data-theme="light"] .section-head .icon { background: #fdf2f8; }
+    .section-head h3 { color: var(--text); font-size: 1.05rem; font-weight: 700; }
+    .section-head p { color: var(--text-muted); font-size: 0.82rem; margin: 0; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+    .field .hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 5px; }
+    .field input, .field textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 9px;
+      font-size: 0.95rem;
+      color: var(--text);
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .field input:focus, .field textarea:focus {
+      outline: none;
+      border-color: #f093fb;
+      background: var(--input-focus-bg);
+      box-shadow: 0 0 0 3px rgba(240, 147, 251, 0.15);
+    }
+    [data-theme="light"] .field input:focus, [data-theme="light"] .field textarea:focus {
+      border-color: #db2777;
+      box-shadow: 0 0 0 3px rgba(219, 39, 119, 0.12);
+    }
+    .field textarea { resize: vertical; min-height: 90px; }
+
+    .action-bar { display: flex; gap: 12px; justify-content: flex-end; margin-top: 4px; }
+    .action-bar .btn-primary {
+      background: linear-gradient(135deg, #f093fb, #f5576c) !important;
+      box-shadow: 0 8px 20px rgba(240, 147, 251, 0.3) !important;
+      padding: 11px 24px;
+      font-size: 0.92rem;
+    }
+    .action-bar .btn-outline { padding: 11px 24px; font-size: 0.92rem; }
+
+    .sidebar-col { display: flex; flex-direction: column; gap: 18px; }
+    .stat-mini { padding: 18px 20px; animation: fadeInUp 0.5s 0.2s ease backwards; }
+    .stat-mini .label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .stat-mini .value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+    .stat-mini .value.gradient {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent; -webkit-text-fill-color: transparent;
+    }
+    [data-theme="light"] .stat-mini .value.gradient {
+      background: linear-gradient(135deg, #db2777, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stat-mini .meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+    .tip-card {
+      padding: 22px;
+      background: linear-gradient(135deg, rgba(240, 147, 251, 0.1), rgba(245, 87, 108, 0.08)) !important;
+      border: 1px solid rgba(240, 147, 251, 0.2) !important;
+      animation: fadeInUp 0.5s 0.3s ease backwards;
+    }
+    [data-theme="light"] .tip-card {
+      background: linear-gradient(135deg, #fdf2f8, #fef2f2) !important;
+      border-color: #fbcfe8 !important;
+    }
+    .tip-card .title { display: flex; align-items: center; gap: 8px; color: var(--text); font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; }
+    .tip-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.55; }
+
+    .linkedin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #0a66c2 !important;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+    .linkedin-btn:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/landing" class="back">← Back to Dashboard</a>
+</div>
+
+<div class="page-container">
+  <%
+    const fields = [user.fullName, user.branch, user.batchYear, user.company, user.designation, user.linkedin, user.bio];
+    const filled = fields.filter(f => f !== undefined && f !== null && String(f).trim() !== '').length;
+    const completionPct = Math.round((filled / fields.length) * 100);
+    const initials = (user.fullName || user.email)
+      .split(/\s+/).filter(Boolean).slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'A';
+  %>
+
+  <div class="profile-layout">
+
+    <div class="glass-card header-card">
+      <div class="avatar"><%= initials %></div>
+      <div class="header-info">
+        <div class="name-row">
+          <h1><%= user.fullName || "Your Name" %></h1>
+          <span class="role-badge">💼 Alumni</span>
+        </div>
+        <p class="email">📧 <%= user.email %></p>
+        <% if (user.designation || user.company) { %>
+          <p class="current-role">
+            <% if (user.designation) { %><strong><%= user.designation %></strong><% } %>
+            <% if (user.designation && user.company) { %> @ <% } %>
+            <% if (user.company) { %><strong><%= user.company %></strong><% } %>
+          </p>
+        <% } %>
+      </div>
+    </div>
+
+    <div>
+      <div class="glass-card completion-card" style="margin-bottom:18px;">
+        <div class="row">
+          <span class="label">Profile Completion</span>
+          <span class="pct"><%= completionPct %>%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: <%= completionPct %>%;"></div></div>
+        <p class="hint">
+          <% if (completionPct < 100) { %>
+            ✨ A complete alumni profile helps students discover you for guidance and referrals.
+          <% } else { %>
+            🎉 Your profile is fully complete!
+          <% } %>
+        </p>
+      </div>
+
+      <form method="POST" action="/profile">
+
+        <div class="glass-card form-section" style="margin-bottom:18px;">
+          <div class="section-head">
+            <div class="icon">👤</div>
+            <div>
+              <h3>Personal Information</h3>
+              <p>Basic details that appear on your alumni profile</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" name="fullName" value="<%= user.fullName || '' %>" required placeholder="e.g. Ravi Kumar">
+          </div>
+          <div class="field">
+            <label>About / Bio</label>
+            <textarea name="bio" placeholder="Your career journey, advice for juniors, areas you can help with..."><%= user.bio || '' %></textarea>
+            <div class="hint">Share your story — this helps students decide who to reach out to.</div>
+          </div>
+        </div>
+
+        <div class="glass-card form-section" style="margin-bottom:18px;">
+          <div class="section-head">
+            <div class="icon">🎓</div>
+            <div>
+              <h3>Academic Background</h3>
+              <p>Where and when you studied at IGIT</p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Branch</label>
+              <input type="text" name="branch" value="<%= user.branch || '' %>" placeholder="e.g. CSE, ECE">
+            </div>
+            <div class="field">
+              <label>Graduation Batch Year</label>
+              <input type="number" name="batchYear" value="<%= user.batchYear || '' %>" placeholder="e.g. 2022">
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card form-section" style="margin-bottom:18px;">
+          <div class="section-head">
+            <div class="icon">💼</div>
+            <div>
+              <h3>Professional Information</h3>
+              <p>Where you work now and how students can reach you</p>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Current Company</label>
+              <input type="text" name="company" value="<%= user.company || '' %>" placeholder="e.g. Google, Microsoft">
+            </div>
+            <div class="field">
+              <label>Designation</label>
+              <input type="text" name="designation" value="<%= user.designation || '' %>" placeholder="e.g. SDE-2, Senior Engineer">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>LinkedIn Profile URL</label>
+            <input type="url" name="linkedin" value="<%= user.linkedin || '' %>" placeholder="https://linkedin.com/in/...">
+            <div class="hint">Helps students connect with you outside the platform.</div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <a href="/landing" class="btn-outline">Cancel</a>
+          <button type="submit" class="btn-primary">Save Profile</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="sidebar-col">
+      <div class="glass-card stat-mini">
+        <div class="label">Current Role</div>
+        <div class="value gradient"><%= user.designation || '—' %></div>
+        <div class="meta"><%= user.company ? '@ ' + user.company : 'Add company' %></div>
+      </div>
+
+      <div class="glass-card stat-mini">
+        <div class="label">Batch & Branch</div>
+        <div class="value"><%= user.branch || '—' %><%= user.batchYear ? " '" + String(user.batchYear).slice(-2) : '' %></div>
+        <div class="meta"><%= user.batchYear ? "Class of " + user.batchYear : "Update batch" %></div>
+      </div>
+
+      <% if (user.linkedin) { %>
+      <div class="glass-card stat-mini">
+        <div class="label">Connect</div>
+        <a href="<%= user.linkedin %>" target="_blank" class="linkedin-btn">🔗 View LinkedIn →</a>
+      </div>
+      <% } %>
+
+      <div class="glass-card tip-card">
+        <div class="title">💡 Why share?</div>
+        <p>Alumni who keep their profile updated mentor <strong>5× more juniors</strong>. Your guidance can shape someone's career.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

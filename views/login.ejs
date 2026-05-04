@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | IGIT Connect</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="/js/theme.js" defer></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #667eea;
+            --pink: #f093fb;
+            --bg: #0a0e27;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: #e8eaf6;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 1;
+        }
+
+        /* ===== Animated gradient blobs ===== */
+        .glow {
+            position: fixed;
+            width: 520px; height: 520px;
+            border-radius: 50%;
+            filter: blur(140px);
+            z-index: 1;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+        @keyframes drift1 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(80px,60px) } }
+        @keyframes drift2 { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-90px,-50px) } }
+        .glow-1 { background: rgba(102,126,234,.55); top:-180px; left:-180px;
+                  animation: drift1 14s ease-in-out infinite; }
+        .glow-2 { background: rgba(240,147,251,.45); bottom:-180px; right:-180px;
+                  animation: drift2 16s ease-in-out infinite; }
+        .glow-3 { background: rgba(118,75,162,.35); top:40%; left:60%;
+                  width: 380px; height: 380px;
+                  animation: drift1 19s ease-in-out infinite reverse; }
+
+        /* ===== Top bar ===== */
+        .top-bar {
+            position: fixed; top:0; left:0; right:0;
+            padding: 18px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+        }
+        .logo {
+            font-size: 1.3rem; font-weight: bold;
+            background: linear-gradient(90deg, var(--primary), var(--pink));
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent; text-decoration: none;
+        }
+        .top-bar a.back {
+            color: #cbd5e1; text-decoration: none; font-size: 0.9rem;
+            transition: all 0.3s; padding: 6px 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.02);
+            backdrop-filter: blur(8px);
+        }
+        .top-bar a.back:hover {
+            color: #fff; border-color: rgba(102,126,234,.5);
+            background: rgba(102,126,234,.08);
+            transform: translateX(-4px);
+        }
+
+        /* ===== Wrapper / card ===== */
+        .wrapper {
+            position: relative; z-index: 5;
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            padding: 80px 20px 40px;
+            perspective: 1200px;
+        }
+        .login-container {
+            position: relative;
+            background: rgba(20, 24, 50, 0.55);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            padding: 44px 38px 38px;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow:
+              0 25px 70px rgba(0,0,0,0.55),
+              0 0 0 1px rgba(255,255,255,0.02) inset;
+            transform-style: preserve-3d;
+            transition: transform 0.25s ease;
+        }
+        /* animated gradient border */
+        .login-container::before {
+            content: ''; position: absolute; inset: -1.5px;
+            border-radius: 22px; padding: 1.5px; pointer-events: none;
+            background: conic-gradient(from var(--ang, 0deg),
+                rgba(102,126,234,.0) 0deg,
+                rgba(102,126,234,.9) 60deg,
+                rgba(240,147,251,.9) 180deg,
+                rgba(102,126,234,.0) 240deg);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            opacity: .85;
+            animation: rotate-ang 6s linear infinite;
+        }
+        @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+        @keyframes rotate-ang { to { --ang: 360deg; } }
+
+        .login-container h2 {
+            font-size: 2.1rem; text-align: center; margin-bottom: 6px;
+            background: linear-gradient(135deg, #fff 0%, #b8c5ff 60%, #f8b9ff 100%);
+            -webkit-background-clip: text; background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            text-align: center; color: #94a3b8;
+            font-size: 0.92rem; margin-bottom: 28px;
+        }
+
+        /* ===== Role toggle (sliding pill) ===== */
+        .role-group {
+            position: relative;
+            display: flex; gap: 0;
+            margin-bottom: 18px;
+            padding: 5px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+        .role-pill {
+            position: absolute;
+            top: 5px; left: 5px;
+            width: calc(50% - 5px); height: calc(100% - 10px);
+            border-radius: 9px;
+            background: linear-gradient(135deg, rgba(102,126,234,.35), rgba(118,75,162,.35));
+            border: 1px solid rgba(102,126,234,.5);
+            box-shadow: 0 4px 16px rgba(102,126,234,.35);
+            transition: transform 0.4s cubic-bezier(.4,.0,.2,1);
+            pointer-events: none;
+        }
+        .role-pill.right { transform: translateX(100%); }
+        .role-option {
+            flex: 1; position: relative; z-index: 2;
+            padding: 12px;
+            cursor: pointer; text-align: center;
+            font-weight: 700; color: #94a3b8;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+            user-select: none;
+        }
+        .role-option input { display: none; }
+        .role-option.active { color: #fff; }
+        .role-option:not(.active):hover { color: #cbd5e1; }
+
+        /* ===== Floating-label inputs ===== */
+        .field {
+            position: relative;
+            margin: 14px 0;
+        }
+        .field input {
+            width: 100%;
+            padding: 22px 48px 10px 18px;
+            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 11px;
+            font-size: 0.98rem;
+            color: #fff;
+            transition: border-color .25s, box-shadow .25s, background-color .25s;
+        }
+        .field input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(102,126,234,.06);
+            box-shadow: 0 0 0 4px rgba(102,126,234,.18);
+        }
+        /* Kill the browser's yellow / white autofill — keep our dark glass look */
+        .field input:-webkit-autofill,
+        .field input:-webkit-autofill:hover,
+        .field input:-webkit-autofill:focus,
+        .field input:-webkit-autofill:active {
+            -webkit-text-fill-color: #fff !important;
+            caret-color: #fff;
+            transition: background-color 99999s ease 0s;
+            -webkit-box-shadow: 0 0 0 1000px rgba(20, 24, 50, 0.85) inset !important;
+            box-shadow: 0 0 0 1000px rgba(20, 24, 50, 0.85) inset !important;
+            border-radius: 11px;
+        }
+        /* Floating label sits ABOVE the input — never crosses the value */
+        .field label {
+            position: absolute;
+            left: 14px; top: 18px;
+            color: #64748b; font-size: 0.95rem;
+            pointer-events: none;
+            transition: top .22s ease, left .22s ease, color .22s ease, transform .22s ease, font-size .22s ease;
+        }
+        .field input:focus + label,
+        .field input:not(:placeholder-shown) + label {
+            top: 6px;
+            left: 16px;
+            font-size: 0.72rem;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .field .icon {
+            position: absolute; right: 16px; top: 50%;
+            transform: translateY(-50%);
+            color: #64748b; font-size: 1.05rem;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+        .field input:focus ~ .icon { color: var(--primary); }
+        .field .toggle-pw {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: transparent; border: 0;
+            color: #64748b; cursor: pointer;
+            padding: 6px 10px; border-radius: 6px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .field .toggle-pw:hover { color: var(--primary); background: rgba(102,126,234,.08); }
+
+        /* ===== Submit button (magnetic + shimmer) ===== */
+        .login-btn {
+            position: relative; overflow: hidden;
+            width: 100%; padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            color: #fff; border: none; border-radius: 11px;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 26px rgba(102,126,234,.4);
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            letter-spacing: 0.3px;
+        }
+        .login-btn::before {
+            content: ''; position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.32), transparent);
+            transition: left 0.7s;
+        }
+        .login-btn:hover::before { left: 100%; }
+        .login-btn:hover {
+            box-shadow: 0 16px 36px rgba(102,126,234,.55);
+        }
+        .login-btn:active { transform: scale(0.98); }
+        .login-btn .spinner {
+            display: none;
+            width: 18px; height: 18px;
+            border: 2.5px solid rgba(255,255,255,.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .login-btn.loading .spinner { display: inline-block; }
+        .login-btn.loading .label { opacity: .8; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .register-link {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .register-link a {
+            color: #b8c5ff; text-decoration: none; font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--pink));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        .register-link a::after {
+            content: ''; position: absolute; left: 0; bottom: -2px;
+            width: 0; height: 1.5px;
+            background: linear-gradient(90deg, var(--primary), var(--pink));
+            transition: width 0.3s;
+        }
+        .register-link a:hover::after { width: 100%; }
+
+        /* ===== Floating accent dots around the card ===== */
+        .accent-dot {
+            position: absolute;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+        @keyframes floatA { 0%,100% { transform: translate(0,0); } 50% { transform: translate(15px,-25px);} }
+        @keyframes floatB { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-20px,18px);} }
+
+        /* Reveal initial state for GSAP */
+        .reveal-stack { opacity: 0; transform: translateY(20px); }
+
+        @media (max-width: 480px) {
+            .login-container { padding: 36px 22px; }
+            .login-container h2 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+<div class="glow glow-3"></div>
+
+<div class="top-bar">
+    <a href="/" class="logo">🎓 IGIT Connect</a>
+    <a href="/" class="back">← Back to home</a>
+</div>
+
+<div class="wrapper">
+    <div class="login-container" id="loginCard">
+        <h2 class="reveal-stack">Welcome Back</h2>
+        <p class="subtitle reveal-stack">Sign in to continue your placement journey</p>
+
+        <form method="POST" action="/login" id="loginForm">
+            <div class="role-group reveal-stack">
+                <span class="role-pill" id="rolePill"></span>
+                <label class="role-option active" data-role="student">
+                    <input type="radio" name="role" value="student" required checked>
+                    🎓 Student
+                </label>
+                <label class="role-option" data-role="alumni">
+                    <input type="radio" name="role" value="alumni">
+                    💼 Alumni
+                </label>
+            </div>
+
+            <div class="field reveal-stack">
+                <input type="email" name="email" id="email" placeholder=" " required autocomplete="email"
+                       data-student-domain="@igitsarang.ac.in">
+                <label for="email">Email address</label>
+                <span class="icon">✉</span>
+            </div>
+            <small id="emailHint" style="display:block;margin:-6px 4px 4px;color:#94a3b8;font-size:.78rem;">
+                🎓 Students must use <strong style="color:#b8c5ff;">@igitsarang.ac.in</strong>
+            </small>
+
+            <div class="field reveal-stack">
+                <input type="password" name="password" id="password" placeholder=" " required autocomplete="current-password">
+                <label for="password">Password</label>
+                <button type="button" class="toggle-pw" id="togglePw" aria-label="Show password">Show</button>
+            </div>
+
+            <button type="submit" class="login-btn reveal-stack" id="loginBtn">
+                <span class="spinner"></span><span class="label">Login →</span>
+            </button>
+        </form>
+
+        <p class="register-link reveal-stack">Don't have an account?
+            <a href="/register">Register now</a>
+        </p>
+    </div>
+</div>
+
+<script>
+/* ==================== ROLE TOGGLE + EMAIL DOMAIN GUARD ==================== */
+const pill = document.getElementById('rolePill');
+const emailEl = document.getElementById('email');
+const emailHint = document.getElementById('emailHint');
+const STUDENT_DOMAIN = '@igitsarang.ac.in';
+
+function syncEmailGuard() {
+    const isStudent = document.querySelector('input[name="role"]:checked').value === 'student';
+    if (isStudent) {
+        emailEl.setAttribute('pattern', '.+' + STUDENT_DOMAIN.replace(/\./g, '\\.') + '$');
+        emailEl.title = 'Student emails must end with ' + STUDENT_DOMAIN;
+        emailHint.style.display = 'block';
+    } else {
+        emailEl.removeAttribute('pattern');
+        emailEl.title = '';
+        emailHint.style.display = 'none';
+    }
+}
+document.querySelectorAll('.role-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+        const radio = opt.querySelector('input');
+        radio.checked = true;
+        document.querySelectorAll('.role-option').forEach(l => l.classList.remove('active'));
+        opt.classList.add('active');
+        if (opt.dataset.role === 'alumni') pill.classList.add('right');
+        else pill.classList.remove('right');
+        syncEmailGuard();
+    });
+});
+syncEmailGuard();
+
+/* ==================== PASSWORD VISIBILITY TOGGLE ==================== */
+const pwInput = document.getElementById('password');
+document.getElementById('togglePw').addEventListener('click', () => {
+    const isPw = pwInput.type === 'password';
+    pwInput.type = isPw ? 'text' : 'password';
+    document.getElementById('togglePw').textContent = isPw ? 'Hide' : 'Show';
+});
+
+/* ==================== SUBMIT LOADING STATE ==================== */
+document.getElementById('loginForm').addEventListener('submit', () => {
+    document.getElementById('loginBtn').classList.add('loading');
+});
+
+/* ==================== 3D-TILT ON CARD ==================== */
+const card = document.getElementById('loginCard');
+card.addEventListener('mousemove', (e) => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width  - 0.5;
+    const y = (e.clientY - r.top)  / r.height - 0.5;
+    card.style.transform = `rotateX(${-y * 6}deg) rotateY(${x * 6}deg) translateZ(0)`;
+});
+card.addEventListener('mouseleave', () => {
+    card.style.transform = 'rotateX(0) rotateY(0)';
+});
+
+/* ==================== ENTRANCE ANIMATIONS (GSAP) ==================== */
+gsap.from('.login-container', {
+    opacity: 0, y: 50, scale: 0.92, duration: 1.1, ease: 'power3.out'
+});
+gsap.to('.reveal-stack', {
+    opacity: 1, y: 0, duration: 0.7, stagger: 0.08, delay: 0.35, ease: 'power3.out'
+});
+
+/* ==================== THREE.JS BACKDROP ==================== */
+const canvas = document.getElementById('three-canvas');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0e27, 0.03);
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, 8);
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+/* Starfield */
+const N = 1400;
+const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+for (let i = 0; i < N; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 60;
+    pos[i*3+1] = (Math.random() - 0.5) * 50;
+    pos[i*3+2] = (Math.random() - 0.5) * 60;
+    const m = Math.random();
+    col[i*3]   = 0.5 + m * 0.5;
+    col[i*3+1] = 0.55 + m * 0.4;
+    col[i*3+2] = 0.95;
+}
+const sg = new THREE.BufferGeometry();
+sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+sg.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+const stars = new THREE.Points(sg, new THREE.PointsMaterial({
+    size: 0.05, vertexColors: true, transparent: true, opacity: 0.85
+}));
+scene.add(stars);
+
+/* Big wireframe sphere on the LEFT — a friendly companion to the card */
+const sphere = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(2.2, 1),
+    new THREE.MeshBasicMaterial({ color: 0x667eea, wireframe: true, transparent: true, opacity: 0.55 })
+);
+sphere.position.set(-5.5, 0.2, -1);
+scene.add(sphere);
+
+/* Inner glow sphere */
+const innerSphere = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(1.4, 0),
+    new THREE.MeshBasicMaterial({ color: 0xf093fb, wireframe: true, transparent: true, opacity: 0.30 })
+);
+innerSphere.position.copy(sphere.position);
+scene.add(innerSphere);
+
+/* Two crossed orbital rings around the sphere */
+const ringMatA = new THREE.MeshBasicMaterial({ color: 0xb8c5ff, transparent: true, opacity: 0.55 });
+const ringMatB = new THREE.MeshBasicMaterial({ color: 0xf093fb, transparent: true, opacity: 0.55 });
+const ringA = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.025, 8, 80), ringMatA);
+const ringB = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.025, 8, 80), ringMatB);
+ringA.rotation.x = Math.PI / 3; ringB.rotation.x = -Math.PI / 4; ringB.rotation.y = Math.PI / 6;
+ringA.position.copy(sphere.position); ringB.position.copy(sphere.position);
+scene.add(ringA); scene.add(ringB);
+
+/* Floating accent shapes on the RIGHT side */
+const floaters = [];
+const palette = [0x667eea, 0xf093fb, 0x764ba2, 0x4fd1c5];
+const geos = [
+    new THREE.OctahedronGeometry(0.4),
+    new THREE.TetrahedronGeometry(0.4),
+    new THREE.TorusGeometry(0.35, 0.07, 8, 16),
+    new THREE.IcosahedronGeometry(0.36, 0),
+];
+for (let i = 0; i < 4; i++) {
+    const m = new THREE.Mesh(geos[i],
+        new THREE.MeshBasicMaterial({ color: palette[i], wireframe: true, transparent: true, opacity: 0.55 }));
+    m.position.set(5 + Math.random() * 1.4, (Math.random() - 0.5) * 5, -1.5 + Math.random() * 2);
+    m.userData.base = m.position.clone();
+    m.userData.phase = Math.random() * Math.PI * 2;
+    scene.add(m); floaters.push(m);
+}
+
+/* Mouse parallax */
+let mouseX = 0, mouseY = 0;
+document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+const clock = { t: 0 };
+function animate() {
+    requestAnimationFrame(animate);
+    clock.t += 16;
+    const t = clock.t;
+
+    stars.rotation.y += 0.0003;
+    stars.rotation.x += 0.0001;
+
+    sphere.rotation.x += 0.0035;
+    sphere.rotation.y += 0.0045;
+    innerSphere.rotation.x -= 0.005;
+    innerSphere.rotation.y -= 0.004;
+    ringA.rotation.z += 0.006;
+    ringB.rotation.z -= 0.008;
+
+    floaters.forEach((m, i) => {
+        m.position.y = m.userData.base.y + Math.sin(t * 0.0008 + m.userData.phase) * 0.45;
+        m.position.x = m.userData.base.x + Math.cos(t * 0.0006 + m.userData.phase) * 0.30;
+        m.rotation.x += 0.006 + i * 0.001;
+        m.rotation.y += 0.008 + i * 0.001;
+    });
+
+    camera.position.x += (mouseX * 0.6 - camera.position.x) * 0.04;
+    camera.position.y += (mouseY * 0.4 - camera.position.y) * 0.04;
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>

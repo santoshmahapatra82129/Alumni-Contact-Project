@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Share Experience - <%= company.companyName %> | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .form-card {
+      max-width: 700px;
+      margin: auto;
+      padding: 40px 35px;
+      animation: fadeInUp 0.6s ease;
+    }
+    .form-card h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #fff, #b8c5ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .form-card .company-tag {
+      text-align: center;
+      color: #b8c5ff;
+      margin-bottom: 25px;
+      font-size: 0.95rem;
+    }
+    .form-card .company-tag strong { color: #fff; }
+    .login-msg { text-align: center; padding: 30px; color: #94a3b8; }
+    .login-msg a { color: #b8c5ff; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/companies/<%= company._id %>" class="back">← Back to <%= company.companyName %></a>
+</div>
+
+<div class="page-container">
+  <div class="glass-card form-card">
+    <h1>✍️ Share Your Experience</h1>
+    <p class="company-tag">Company: <strong><%= company.companyName %></strong></p>
+
+    <% if (!user) { %>
+      <div class="login-msg">
+        <p>Please log in to share your interview experience.</p>
+        <p style="margin-top:15px;"><a href="/login?redirect=/companies/<%= company._id %>/experience/new" class="btn-primary">Login to Continue</a></p>
+      </div>
+    <% } else { %>
+      <form action="/companies/<%= company._id %>/experience" method="POST">
+        <label class="form-label">Batch Year</label>
+        <input type="number" name="batchYear" class="form-input" placeholder="e.g. 2024" required>
+
+        <label class="form-label">Role</label>
+        <input type="text" name="role" class="form-input" placeholder="SDE Intern / Analyst / Engineer" required>
+
+        <label class="form-label">Rounds Description</label>
+        <textarea name="roundsDescription" class="form-textarea" placeholder="Walk us through each round you faced..." required></textarea>
+
+        <label class="form-label">Questions Asked</label>
+        <textarea name="questionsAsked" class="form-textarea" placeholder="Specific technical & HR questions you remember..." required></textarea>
+
+        <label class="form-label">Tips for Juniors (optional)</label>
+        <textarea name="tips" class="form-textarea" placeholder="What you wish you knew before the interview..."></textarea>
+
+        <label class="form-label">Difficulty Level</label>
+        <select name="difficultyLevel" class="form-select">
+          <option value="Easy">Easy</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:24px;">Submit Experience</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+</body>
+</html>

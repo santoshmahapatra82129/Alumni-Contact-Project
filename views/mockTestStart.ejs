@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title><%= test.title %> | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .test-shell { max-width: 880px; margin: auto; }
+
+    /* ---- Sticky timer + progress bar ---- */
+    .timer-bar {
+      position: sticky; top: 70px; z-index: 30;
+      background: rgba(13, 17, 38, 0.85);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px 22px;
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    .timer {
+      font-family: 'Courier New', monospace;
+      font-size: 1.4rem; font-weight: 800;
+      color: #b8c5ff;
+      letter-spacing: 1px;
+    }
+    .timer.warn   { color: #ffd166; }
+    .timer.danger { color: #ff8a80; animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { opacity: 0.5; } }
+    .progress-wrap { flex: 1; min-width: 180px; }
+    .progress-track {
+      height: 8px; border-radius: 4px;
+      background: rgba(255,255,255,0.08); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      transition: width 0.25s;
+    }
+    .progress-label { font-size: 0.82rem; color: #94a3b8; margin-top: 4px; }
+    .badge {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.3px;
+    }
+    .badge.easy     { background: rgba(46, 213, 115, 0.15); color: #6fffaa; border: 1px solid rgba(46, 213, 115, 0.4); }
+    .badge.moderate { background: rgba(255, 184, 0, 0.15); color: #ffd166; border: 1px solid rgba(255, 184, 0, 0.4); }
+    .badge.hard     { background: rgba(255, 107, 107, 0.15); color: #ff8a80; border: 1px solid rgba(255, 107, 107, 0.4); }
+
+    /* ---- Section heading ---- */
+    .section-heading {
+      margin: 30px 0 12px;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, rgba(102,126,234,0.12), rgba(240,147,251,0.08));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .section-heading h3 { color: #fff; font-size: 1.05rem; }
+    .section-heading .count { color: #94a3b8; font-size: 0.85rem; margin-left: auto; }
+
+    /* ---- Question card ---- */
+    .q-card {
+      padding: 22px 26px;
+      margin-bottom: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      backdrop-filter: blur(10px);
+    }
+    .q-num {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; padding: 4px 12px; border-radius: 12px;
+      font-size: 0.8rem; font-weight: bold; margin-bottom: 12px;
+    }
+    .q-text { color: #fff; font-size: 1.02rem; margin-bottom: 16px; line-height: 1.5; }
+    .option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 16px; margin-bottom: 8px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #cbd5e1;
+    }
+    .option:hover { background: rgba(102,126,234,0.08); border-color: rgba(102,126,234,0.4); color: #fff; }
+    .option input[type="radio"] { accent-color: #667eea; width: 16px; height: 16px; cursor: pointer; }
+    .option:has(input:checked) {
+      background: rgba(102,126,234,0.15);
+      border-color: #667eea; color: #fff;
+    }
+
+    .submit-card {
+      padding: 22px; text-align: center;
+      margin-top: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+    }
+    .submit-card button {
+      padding: 14px 32px; min-width: 280px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: bold;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 8px 22px rgba(102,126,234,0.35);
+    }
+    .submit-card button:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(102,126,234,0.55); }
+
+    .auto-submit-note {
+      margin-top: 10px; font-size: 0.82rem; color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/mock-test" class="back" id="exitLink"
+     onclick="return confirm('Exit this test? Your answers will be lost.');">← Exit Test</a>
+</div>
+
+<div class="page-container">
+  <h1 class="page-title"><%= test.title %></h1>
+  <p class="page-subtitle">Section-wise mock test with timer. Answer all questions before time runs out.</p>
+
+  <div class="test-shell">
+
+    <div class="timer-bar">
+      <span class="badge <%= test.difficulty %>">
+        <%= test.difficulty === 'easy' ? '🟢 Easy' : test.difficulty === 'moderate' ? '🟡 Moderate' : '🔴 Hard' %>
+      </span>
+      <span class="timer" id="timer">--:--</span>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-label"><span id="answeredCount">0</span> / <span id="totalCount"><%= test.totalQuestions %></span> answered</div>
+      </div>
+    </div>
+
+    <form action="/mock-test/<%= test.id %>" method="POST" id="testForm">
+      <input type="hidden" name="__timeTaken" id="timeTaken" value="0">
+
+      <% let qNum = 0; %>
+      <% blocks.forEach(function (block) { %>
+        <% const sectionNames = { aptitude: '🧮 Aptitude', english: '📝 English Vocabulary', cseCore: '💻 CSE Core Subjects' }; %>
+        <div class="section-heading">
+          <h3><%= sectionNames[block.category] || block.category %></h3>
+          <span class="count"><%= block.questions.length %> questions</span>
+        </div>
+        <% block.questions.forEach(function (q) { qNum++; %>
+          <div class="q-card">
+            <span class="q-num">Q<%= qNum %></span>
+            <p class="q-text"><%= q.question %></p>
+            <% q.options.forEach(function (opt, i) { %>
+              <label class="option">
+                <input type="radio" name="<%= q._id %>" value="<%= i %>">
+                <span><%= opt %></span>
+              </label>
+            <% }); %>
+          </div>
+        <% }); %>
+      <% }); %>
+
+      <div class="submit-card">
+        <button type="submit" id="submitBtn">Submit Test →</button>
+        <div class="auto-submit-note">⏱ Test will auto-submit when timer hits 00:00.</div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  const DURATION = <%= test.durationMinutes %> * 60; // seconds
+  let remaining = DURATION;
+  let elapsed = 0;
+  const timerEl = document.getElementById('timer');
+  const progressFill = document.getElementById('progressFill');
+  const answeredCount = document.getElementById('answeredCount');
+  const totalCount = parseInt(document.getElementById('totalCount').textContent, 10);
+  const form = document.getElementById('testForm');
+  const timeTakenInput = document.getElementById('timeTaken');
+
+  function fmt(secs) {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  }
+
+  function tick() {
+    timerEl.textContent = fmt(remaining);
+    timerEl.classList.toggle('warn', remaining <= 300 && remaining > 60);
+    timerEl.classList.toggle('danger', remaining <= 60);
+    if (remaining <= 0) {
+      timeTakenInput.value = String(elapsed);
+      form.submit();
+      return;
+    }
+    remaining--;
+    elapsed++;
+    setTimeout(tick, 1000);
+  }
+  tick();
+
+  // Update answered counter + progress bar live
+  function updateAnswered() {
+    const groups = new Set();
+    form.querySelectorAll('input[type="radio"]:checked').forEach(r => groups.add(r.name));
+    const n = groups.size;
+    answeredCount.textContent = n;
+    progressFill.style.width = ((n / totalCount) * 100) + '%';
+  }
+  form.addEventListener('change', updateAnswered);
+
+  // Confirm before manual submit if anything is left blank
+  form.addEventListener('submit', (e) => {
+    timeTakenInput.value = String(elapsed);
+    if (remaining > 0) {
+      const groups = new Set();
+      form.querySelectorAll('input[type="radio"]:checked').forEach(r => groups.add(r.name));
+      if (groups.size < totalCount) {
+        const ok = confirm(`You have ${totalCount - groups.size} unanswered question(s). Submit anyway?`);
+        if (!ok) e.preventDefault();
+      }
+    }
+  });
+
+  // Warn before page reload / nav
+  window.addEventListener('beforeunload', (e) => {
+    if (remaining > 0) { e.preventDefault(); e.returnValue = ''; }
+  });
+})();
+</script>
+
+</body>
+</html>

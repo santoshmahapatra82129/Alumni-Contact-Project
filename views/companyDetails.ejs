@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title><%= company.companyName %> | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .detail-wrapper { max-width: 950px; margin: auto; }
+
+    .hero-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 30px;
+      align-items: center;
+      padding: 30px;
+      margin-bottom: 25px;
+    }
+    .logo-box {
+      width: 200px; height: 160px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .hero-info h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #fff, #b8c5ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 10px;
+    }
+    .hero-info .short { color: #cbd5e1; font-size: 1.05rem; margin-bottom: 14px; }
+    .meta-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-pill {
+      padding: 4px 12px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #b8c5ff;
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 14px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-bottom: 25px;
+    }
+    .info-block { padding: 24px 26px; }
+    .info-block h3 {
+      color: #b8c5ff;
+      font-size: 1.05rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .info-block p, .info-block li { color: #cbd5e1; line-height: 1.6; font-size: 0.95rem; }
+    .info-block ul { list-style: none; padding: 0; }
+    .info-block li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .info-block li:last-child { border-bottom: none; }
+    .info-block strong { color: #fff; }
+    .info-block a { color: #b8c5ff; text-decoration: none; }
+    .info-block a:hover { color: #f093fb; }
+
+    .rounds-card { padding: 28px; margin-bottom: 25px; }
+    .rounds-card h2 {
+      color: #fff;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .round-item {
+      display: flex;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .round-item:last-child { border-bottom: none; }
+    .round-num {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .round-info strong { color: #fff; display: block; margin-bottom: 4px; }
+    .round-info span { color: #94a3b8; font-size: 0.9rem; }
+
+    .toggle-section { padding: 28px; margin-bottom: 20px; }
+    .toggle-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    .toggle-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5); }
+
+    .experience-section { display: none; margin-top: 25px; }
+    .experience-section.open { display: block; animation: fadeInUp 0.4s ease; }
+    .exp-card {
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      border-left: 3px solid #667eea;
+    }
+    .exp-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+    .exp-tag {
+      padding: 3px 10px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #b8c5ff;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(102, 126, 234, 0.25);
+    }
+    .exp-tag.diff-Easy { background: rgba(46, 213, 115, 0.15); color: #6fffaa; border-color: rgba(46, 213, 115, 0.3); }
+    .exp-tag.diff-Hard { background: rgba(255, 107, 107, 0.15); color: #ff8a80; border-color: rgba(255, 107, 107, 0.3); }
+    .exp-card p { color: #cbd5e1; font-size: 0.92rem; margin: 6px 0; line-height: 1.5; }
+    .exp-card strong { color: #fff; }
+    .exp-card small { color: #64748b; display: block; margin-top: 10px; }
+
+    .add-form-card { padding: 26px; margin-top: 18px; }
+    .add-form-card h3 { color: #fff; margin-bottom: 14px; }
+
+    .login-prompt {
+      padding: 20px;
+      text-align: center;
+      margin-top: 18px;
+      background: rgba(240, 147, 251, 0.05);
+    }
+    .login-prompt a { color: #f093fb; font-weight: bold; text-decoration: none; }
+
+    @media (max-width: 700px) {
+      .hero-row { grid-template-columns: 1fr; text-align: center; }
+      .logo-box { margin: auto; }
+      .info-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/companies" class="back">← All Companies</a>
+</div>
+
+<div class="page-container">
+  <div class="detail-wrapper">
+
+    <!-- Hero -->
+    <div class="glass-card hero-row fade-up">
+      <div class="logo-box">
+        <img src="<%= company.companyImage %>" alt="<%= company.companyName %>"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'font-size:2.5rem;font-weight:bold;background:linear-gradient(135deg,#667eea,#764ba2);width:100%;height:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;\'>'+'<%= company.companyName.charAt(0) %>'+'</div>';">
+      </div>
+      <div class="hero-info">
+        <h1><%= company.companyName %></h1>
+        <p class="short"><%= company.shortDescription %></p>
+        <div class="meta-pills">
+          <% if (company.visitYear) { %><span class="meta-pill">📅 Visited <%= company.visitYear %></span><% } %>
+          <span class="meta-pill">🎯 Min CGPA: <%= company.eligibility.minCGPA %></span>
+          <span class="meta-pill">🔄 <%= company.totalRounds %> Rounds</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info grid -->
+    <div class="info-grid">
+      <div class="glass-card info-block fade-up">
+        <h3>📋 About the Company</h3>
+        <p><%= company.fullDescription %></p>
+      </div>
+      <div class="glass-card info-block fade-up">
+        <h3>✅ Eligibility</h3>
+        <ul>
+          <li><strong>Branches:</strong> <%= company.eligibility.branchAllowed.join(", ") %></li>
+          <li><strong>Min CGPA:</strong> <%= company.eligibility.minCGPA %></li>
+          <li><strong>Total Rounds:</strong> <%= company.totalRounds %></li>
+          <% if (company.visitYear) { %><li><strong>Visit Year:</strong> <%= company.visitYear %></li><% } %>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Rounds -->
+    <div class="glass-card rounds-card fade-up">
+      <h2>🎯 Selection Rounds</h2>
+      <% company.rounds.forEach(round => { %>
+        <div class="round-item">
+          <div class="round-num"><%= round.roundNumber %></div>
+          <div class="round-info">
+            <strong><%= round.roundName %></strong>
+            <span><%= round.description %></span>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <!-- Alumni POC -->
+    <% if (company.alumniPOC && company.alumniPOC.name) { %>
+    <div class="glass-card info-block fade-up" style="margin-bottom:25px;">
+      <h3>👤 Alumni Point of Contact</h3>
+      <ul>
+        <li><strong>Name:</strong> <%= company.alumniPOC.name %></li>
+        <li><strong>Designation:</strong> <%= company.alumniPOC.designation %></li>
+        <li><strong>Email:</strong> <a href="mailto:<%= company.alumniPOC.email %>"><%= company.alumniPOC.email %></a></li>
+        <li><strong>LinkedIn:</strong> <a href="<%= company.alumniPOC.linkedin %>" target="_blank">View Profile →</a></li>
+        <li><strong>Batch:</strong> <%= company.alumniPOC.batch %></li>
+      </ul>
+    </div>
+    <% } %>
+
+    <!-- Experiences toggle -->
+    <div class="glass-card toggle-section fade-up">
+      <button class="toggle-btn" onclick="toggleExperience()">
+        <span id="exp-toggle-text">📖 See Student Experiences (<%= experiences.length %>)</span>
+      </button>
+
+      <div id="experienceSection" class="experience-section">
+
+        <% if (experiences.length === 0) { %>
+          <div class="glass-card info-block" style="margin-top:18px;text-align:center;padding:30px;">
+            <p style="color:#94a3b8;">No experiences shared yet. Be the first to help juniors!</p>
+          </div>
+        <% } %>
+
+        <% experiences.forEach(exp => { %>
+          <div class="glass-card exp-card">
+            <div class="exp-meta">
+              <span class="exp-tag">🎯 <%= exp.role %></span>
+              <span class="exp-tag">📅 Batch <%= exp.batchYear %></span>
+              <span class="exp-tag diff-<%= exp.difficultyLevel %>">⚡ <%= exp.difficultyLevel %></span>
+            </div>
+            <p><strong>Rounds:</strong> <%= exp.roundsDescription %></p>
+            <p><strong>Questions Asked:</strong> <%= exp.questionsAsked %></p>
+            <% if (exp.tips) { %><p><strong>Tips:</strong> <%= exp.tips %></p><% } %>
+            <small>Shared by: <%= exp.student.email %></small>
+          </div>
+        <% }) %>
+
+        <% if (user) { %>
+          <div class="glass-card add-form-card">
+            <h3>✍️ Share Your Experience</h3>
+            <form action="/companies/<%= company._id %>/experience" method="POST">
+              <label class="form-label">Batch Year</label>
+              <input type="number" class="form-input" name="batchYear" placeholder="e.g. 2024" required>
+              <label class="form-label">Role</label>
+              <input type="text" class="form-input" name="role" placeholder="e.g. SDE Intern" required>
+              <label class="form-label">Rounds Description</label>
+              <textarea class="form-textarea" name="roundsDescription" placeholder="Describe what happened in each round..." required></textarea>
+              <label class="form-label">Questions Asked</label>
+              <textarea class="form-textarea" name="questionsAsked" placeholder="Specific questions you remember..." required></textarea>
+              <label class="form-label">Tips for Juniors (optional)</label>
+              <textarea class="form-textarea" name="tips" placeholder="Advice for future candidates..."></textarea>
+              <label class="form-label">Difficulty Level</label>
+              <select name="difficultyLevel" class="form-select">
+                <option value="Easy">Easy</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+              <button type="submit" class="btn-primary" style="margin-top:18px;width:100%;">Submit Experience</button>
+            </form>
+          </div>
+        <% } else { %>
+          <div class="glass-card login-prompt">
+            <a href="/login?redirect=/companies/<%= company._id %>/experience/new">🔒 Login to share your experience</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function toggleExperience() {
+    const section = document.getElementById('experienceSection');
+    const text = document.getElementById('exp-toggle-text');
+    section.classList.toggle('open');
+    text.textContent = section.classList.contains('open')
+      ? '✕ Hide Experiences'
+      : '📖 See Student Experiences (<%= experiences.length %>)';
+  }
+  if (window.location.hash === '#experience') toggleExperience();
+</script>
+
+</body>
+</html>

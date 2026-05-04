@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Resources | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .res-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 22px;
+    }
+    .res-card {
+      padding: 28px 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.4s;
+      animation: fadeInUp 0.5s ease backwards;
+      position: relative;
+      overflow: hidden;
+    }
+    .res-card:nth-child(1) { animation-delay: 0.05s; }
+    .res-card:nth-child(2) { animation-delay: 0.15s; }
+    .res-card:nth-child(3) { animation-delay: 0.25s; }
+    .res-card:nth-child(4) { animation-delay: 0.35s; }
+    .res-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.08), transparent);
+      transition: left 0.6s;
+    }
+    .res-card:hover::before { left: 100%; }
+    .res-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(102, 126, 234, 0.4);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+    }
+    .res-icon { font-size: 2.5rem; margin-bottom: 14px; display: block; }
+    .res-card h3 { color: #fff; font-size: 1.2rem; margin-bottom: 8px; }
+    .res-card p { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 12px; }
+    .res-arrow { color: #b8c5ff; font-weight: bold; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/landing" class="back">← Back to Dashboard</a>
+</div>
+
+<div class="page-container">
+  <h1 class="page-title">📚 Resources Hub</h1>
+  <p class="page-subtitle">Curated study materials and tools to ace your placements — all in one place.</p>
+
+  <div class="res-grid">
+    <a href="/resources/aptitude" class="glass-card res-card">
+      <span class="res-icon">🧮</span>
+      <h3>Aptitude Practice</h3>
+      <p>Quantitative aptitude, logical reasoning, and verbal ability resources for placement prep.</p>
+      <div class="res-arrow">Open →</div>
+    </a>
+    <a href="/resources/dsa" class="glass-card res-card">
+      <span class="res-icon">💻</span>
+      <h3>DSA & Coding</h3>
+      <p>Data structures, algorithms, and problem-solving tutorials for technical interviews.</p>
+      <div class="res-arrow">Open →</div>
+    </a>
+    <a href="/resources/resume" class="glass-card res-card">
+      <span class="res-icon">📄</span>
+      <h3>Resume Templates</h3>
+      <p>10 ATS-friendly LaTeX resume templates ready to copy or download as .tex files.</p>
+      <div class="res-arrow">Open →</div>
+    </a>
+    <a href="/resources/mock-interviews" class="glass-card res-card">
+      <span class="res-icon">🎤</span>
+      <h3>Mock Interviews</h3>
+      <p>Behavioral and technical interview preparation guides, common questions, and tips.</p>
+      <div class="res-arrow">Open →</div>
+    </a>
+  </div>
+</div>
+
+</body>
+</html>

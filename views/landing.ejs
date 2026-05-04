@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard | IGIT Connect</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/js/theme.js" defer></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e8eaf6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+        .glow {
+            position: fixed;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .glow-1 { background: rgba(102, 126, 234, 0.35); top: -150px; left: -100px; }
+        .glow-2 { background: rgba(240, 147, 251, 0.25); bottom: -150px; right: -100px; }
+
+        /* ========= TOP BAR ========= */
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 60px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10, 14, 39, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            z-index: 50;
+        }
+        .topbar .logo {
+            font-size: 1.25rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .topbar .clock {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        /* ========= LAYOUT ========= */
+        .layout {
+            position: relative;
+            z-index: 5;
+            padding-top: 60px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ========= SIDEBAR ========= */
+        .sidebar {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 260px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 25px 18px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+        }
+        .sidebar-title {
+            text-align: center;
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .sidebar-title .name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #fff, #b8c5ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .role-pill {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: bold;
+        }
+        .role-pill.student {
+            background: rgba(102, 126, 234, 0.15);
+            color: #b8c5ff;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+        .role-pill.alumni {
+            background: rgba(240, 147, 251, 0.15);
+            color: #f8b9ff;
+            border: 1px solid rgba(240, 147, 251, 0.3);
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.12);
+            color: #fff;
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateX(4px);
+        }
+        .nav-item .icon { font-size: 1.1rem; }
+        .nav-logout {
+            margin-top: 12px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .nav-logout .nav-item:hover {
+            background: rgba(231, 76, 60, 0.12);
+            border-color: rgba(231, 76, 60, 0.3);
+            color: #ff8a80;
+        }
+
+        /* ========= MAIN ========= */
+        .main {
+            grid-column: 2;
+            padding: 30px 40px 60px;
+            margin-left: 20px;
+        }
+
+        /* Welcome banner */
+        .welcome {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.12));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 32px 36px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+        .welcome::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.3), transparent);
+            border-radius: 50%;
+        }
+        .welcome h1 {
+            font-size: 2rem;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #fff, #b8c5ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .welcome p { color: #cbd5e1; font-size: 1rem; }
+
+        /* Quick actions grid */
+        .section-title {
+            font-size: 1.3rem;
+            color: #fff;
+            margin: 30px 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+        .action-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease backwards;
+        }
+        .action-card:nth-child(1) { animation-delay: 0.1s; }
+        .action-card:nth-child(2) { animation-delay: 0.2s; }
+        .action-card:nth-child(3) { animation-delay: 0.3s; }
+        .action-card:nth-child(4) { animation-delay: 0.4s; }
+        .action-card:nth-child(5) { animation-delay: 0.5s; }
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.6s;
+        }
+        .action-card:hover::before { left: 100%; }
+        .action-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+        }
+        .action-icon {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+        .action-card h3 { color: #fff; font-size: 1.1rem; margin-bottom: 6px; }
+        .action-card p { color: #94a3b8; font-size: 0.88rem; line-height: 1.5; }
+        .action-card .arrow {
+            color: #667eea;
+            margin-top: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 14px;
+        }
+        .stat-card .label { color: #94a3b8; font-size: 0.85rem; }
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 6px;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            background: rgba(46, 125, 50, 0.2);
+            border: 1px solid rgba(46, 213, 115, 0.4);
+            color: #6fffaa;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            animation: slideIn 0.4s ease, fadeOut 0.5s 3.5s forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========= SCROLLING TICKER ========= */
+        .ticker {
+            position: fixed;
+            bottom: 0;
+            left: 0; right: 0;
+            background: rgba(10, 14, 39, 0.7);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 10px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            z-index: 30;
+        }
+        .ticker span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll 25s linear infinite;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+        @keyframes scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
+        }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { position: static; width: auto; margin: 20px; }
+            .main { grid-column: 1; margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<!-- Top bar -->
+<div class="topbar">
+    <a href="/landing" style="text-decoration:none;" class="logo">🎓 IGIT Connect</a>
+    <div class="clock" id="clock"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast">✓ Successfully logged in!</div>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-title">
+            <div class="name"><%= user.fullName || user.email.split('@')[0] %></div>
+            <% if (user.role === "alumni") { %>
+                <span class="role-pill alumni">💼 Alumni</span>
+            <% } else { %>
+                <span class="role-pill student">🎓 Student</span>
+            <% } %>
+        </div>
+        <a href="/companies" class="nav-item"><span class="icon">🏢</span> Explore Companies</a>
+        <a href="/resources" class="nav-item"><span class="icon">📚</span> Resources</a>
+        <a href="/mock-test" class="nav-item"><span class="icon">🧪</span> Mock Test</a>
+        <a href="/resources/resume" class="nav-item"><span class="icon">📄</span> Resume Templates</a>
+        <% if (user.role === "alumni") { %>
+            <a href="/profile" class="nav-item"><span class="icon">💼</span> My Alumni Profile</a>
+        <% } else { %>
+            <a href="/profile" class="nav-item"><span class="icon">🎓</span> My Student Profile</a>
+        <% } %>
+        <div class="nav-logout">
+            <a href="/logout" class="nav-item"><span class="icon">🚪</span> Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+        <div class="welcome">
+            <h1>Welcome back, <%= (user.fullName || user.email.split('@')[0]) %>! 👋</h1>
+            <p>Here's your placement prep dashboard. Pick where you want to continue.</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="label">Companies on Platform</div>
+                <div class="value">11</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Aptitude Questions</div>
+                <div class="value">10+</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Resume Templates</div>
+                <div class="value">10</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Account Type</div>
+                <div class="value" style="font-size:1.3rem;">
+                    <%= user.role === "alumni" ? "Alumni" : "Student" %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="section-title">⚡ Quick Actions</div>
+        <div class="actions">
+            <a href="/companies" class="action-card">
+                <span class="action-icon">🏢</span>
+                <h3>Explore Companies</h3>
+                <p>Browse 11 companies that visited campus. See eligibility, rounds, and alumni POCs.</p>
+                <div class="arrow">View companies →</div>
+            </a>
+            <a href="/mock-test" class="action-card">
+                <span class="action-icon">🧪</span>
+                <h3>Mock Test</h3>
+                <p>15 timed mock tests across Easy / Moderate / Hard. Each with 45 questions covering Aptitude, English & CSE Core.</p>
+                <div class="arrow">Start test →</div>
+            </a>
+            <a href="/resources/resume" class="action-card">
+                <span class="action-icon">📄</span>
+                <h3>Resume Templates</h3>
+                <p>10 ATS-friendly LaTeX templates. Copy or download .tex instantly.</p>
+                <div class="arrow">Browse templates →</div>
+            </a>
+            <a href="/resources" class="action-card">
+                <span class="action-icon">📚</span>
+                <h3>Resources Hub</h3>
+                <p>Curated DSA, aptitude, and mock interview prep links.</p>
+                <div class="arrow">Open hub →</div>
+            </a>
+            <a href="/profile" class="action-card">
+                <span class="action-icon"><%= user.role === "alumni" ? "💼" : "🎓" %></span>
+                <h3>Complete Your Profile</h3>
+                <p>Add your branch, batch, <%= user.role === "alumni" ? "company, designation" : "CGPA" %>, and bio.</p>
+                <div class="arrow">Edit profile →</div>
+            </a>
+        </div>
+
+    </main>
+</div>
+
+<!-- Bottom ticker -->
+<div class="ticker">
+    <span>✨ Indira Gandhi Institute of Technology, Sarang &nbsp;&nbsp;•&nbsp;&nbsp; Connect • Learn • Get Placed &nbsp;&nbsp;•&nbsp;&nbsp; Built by students, for students &nbsp;&nbsp;•&nbsp;&nbsp; Share your placement experience to help juniors</span>
+</div>
+
+<script>
+    // Clock
+    function updateClock() {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const timeStr = now.toLocaleTimeString();
+        document.getElementById('clock').textContent = `${dateStr} • ${timeStr}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Three.js particle background
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    const particleCount = 1000;
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 30;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 30;
+        const m = Math.random();
+        colors[i * 3] = 0.4 + m * 0.6;
+        colors[i * 3 + 1] = 0.5 + m * 0.4;
+        colors[i * 3 + 2] = 0.9;
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const points = new THREE.Points(geom, new THREE.PointsMaterial({
+        size: 0.04, vertexColors: true, transparent: true, opacity: 0.6
+    }));
+    scene.add(points);
+    if (window.IGITTheme) window.IGITTheme.bind(points);
+    camera.position.z = 8;
+
+    function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0005;
+        points.rotation.x += 0.0002;
+        renderer.render(scene, camera);
+    }
+    animate();
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+</body>
+</html>

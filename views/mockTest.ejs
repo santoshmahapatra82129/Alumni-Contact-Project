@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mock Test | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .difficulty-section { margin-bottom: 36px; }
+    .difficulty-title {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 1.4rem; color: #fff; margin: 8px 4px 16px;
+    }
+    .difficulty-title::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge.easy     { background: rgba(46, 213, 115, 0.15); color: #6fffaa; border: 1px solid rgba(46, 213, 115, 0.4); }
+    .badge.moderate { background: rgba(255, 184, 0, 0.15); color: #ffd166; border: 1px solid rgba(255, 184, 0, 0.4); }
+    .badge.hard     { background: rgba(255, 107, 107, 0.15); color: #ff8a80; border: 1px solid rgba(255, 107, 107, 0.4); }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .test-card {
+      padding: 22px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(14px);
+      transition: all 0.3s;
+      display: flex; flex-direction: column;
+      animation: fadeInUp 0.5s ease backwards;
+    }
+    .test-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(102,126,234,0.45);
+      box-shadow: 0 12px 30px rgba(102,126,234,0.18);
+    }
+    .test-card h3 { color: #fff; font-size: 1.1rem; margin-bottom: 6px; }
+    .test-card .meta {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      color: #94a3b8; font-size: 0.85rem;
+      margin: 12px 0 18px;
+    }
+    .test-card .meta b { color: #b8c5ff; }
+    .test-card .start-btn {
+      margin-top: auto;
+      display: inline-block; text-align: center;
+      padding: 11px 18px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; text-decoration: none; font-weight: 700;
+      transition: all 0.25s;
+      box-shadow: 0 6px 18px rgba(102,126,234,0.25);
+    }
+    .test-card .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(102,126,234,0.45);
+    }
+    .top-info {
+      padding: 18px 22px;
+      background: rgba(102,126,234,0.08);
+      border: 1px solid rgba(102,126,234,0.25);
+      border-radius: 12px;
+      color: #b8c5ff; font-size: 0.92rem;
+      margin-bottom: 26px;
+      line-height: 1.55;
+    }
+    .top-info b { color: #fff; }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/landing" class="back">← Dashboard</a>
+</div>
+
+<div class="page-container">
+  <h1 class="page-title">🧪 Mock Tests</h1>
+  <p class="page-subtitle">Pick a difficulty, take a 45-question test, and get an instant score breakdown.</p>
+
+  <div class="top-info">
+    Each test contains <b>15 Aptitude</b>, <b>15 English Vocabulary</b>, and <b>15 CSE Core</b> questions
+    at the chosen difficulty. The timer starts the moment you open the test, auto-submits when it hits zero,
+    and you'll see a detailed result with section-wise breakdown.
+  </div>
+
+  <% ['easy', 'moderate', 'hard'].forEach(function (level) { %>
+    <div class="difficulty-section">
+      <div class="difficulty-title">
+        <span class="badge <%= level %>">
+          <%= level === 'easy' ? '🟢 Easy' : level === 'moderate' ? '🟡 Moderate' : '🔴 Hard' %>
+        </span>
+        <span><%= grouped[level].length %> tests available</span>
+      </div>
+      <div class="test-grid">
+        <% grouped[level].forEach(function (t, i) { %>
+          <div class="test-card" style="animation-delay: <%= i * 0.05 %>s;">
+            <h3><%= t.title %></h3>
+            <div class="meta">
+              <span>📋 <b><%= t.totalQuestions %></b> questions</span>
+              <span>⏱ <b><%= t.durationMinutes %></b> minutes</span>
+            </div>
+            <a href="/mock-test/<%= t.id %>" class="start-btn">Start Test →</a>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  <% }); %>
+</div>
+
+</body>
+</html>

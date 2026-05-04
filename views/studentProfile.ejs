@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Student Profile | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .profile-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    @media (max-width: 900px) { .profile-layout { grid-template-columns: 1fr; } }
+
+    /* ===== Header card ===== */
+    .header-card {
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      animation: fadeInUp 0.5s ease;
+      position: relative;
+      overflow: hidden;
+      grid-column: 1 / -1;
+    }
+    .header-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 300px; height: 100%;
+      background: radial-gradient(circle at 100% 0%, rgba(102, 126, 234, 0.15), transparent 60%);
+      pointer-events: none;
+    }
+    [data-theme="light"] .header-card::before {
+      background: radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.08), transparent 60%);
+    }
+
+    .avatar {
+      position: relative;
+      width: 96px; height: 96px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      letter-spacing: -1px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .avatar img.avatar-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+    .avatar .avatar-edit {
+      position: absolute;
+      bottom: 6px; right: 6px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(13,17,38,0.85);
+      color: #b8c5ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      border: 2px solid rgba(255,255,255,0.18);
+      transition: all 0.2s;
+    }
+    .avatar:hover .avatar-edit { background: #667eea; color: #fff; transform: scale(1.05); }
+    .photo-actions {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .photo-actions form { display: inline-flex; }
+    .photo-actions .btn-link {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .photo-actions .btn-link { border-color: #e5e7eb; color: #475569; }
+    .photo-actions .btn-link:hover { color: #ff8a80; border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); }
+
+    .header-info { flex: 1; min-width: 0; }
+    .header-info .name-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
+    .header-info h1 {
+      font-size: 1.7rem;
+      color: var(--text);
+      margin: 0;
+    }
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #b8c5ff;
+      border: 1px solid rgba(102, 126, 234, 0.35);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+    [data-theme="light"] .role-badge {
+      background: #eef2ff;
+      color: #4338ca;
+      border-color: #c7d2fe;
+    }
+    .header-info .email { color: var(--text-muted); font-size: 0.92rem; }
+
+    /* ===== Profile completion ===== */
+    .completion-card {
+      padding: 22px 24px;
+      animation: fadeInUp 0.5s 0.1s ease backwards;
+    }
+    .completion-card .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .completion-card .label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .completion-card .pct { font-size: 1.5rem; font-weight: bold; color: var(--text); }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    [data-theme="light"] .progress-bar { background: #f1f5f9; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .completion-card .hint { font-size: 0.82rem; color: var(--text-muted); margin-top: 10px; }
+
+    /* ===== Form sections ===== */
+    .form-section {
+      padding: 26px 30px;
+      animation: fadeInUp 0.5s 0.15s ease backwards;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .section-head .icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: rgba(102, 126, 234, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    [data-theme="light"] .section-head .icon { background: #eef2ff; }
+    .section-head h3 { color: var(--text); font-size: 1.05rem; font-weight: 700; }
+    .section-head p { color: var(--text-muted); font-size: 0.82rem; margin: 0; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+    .field .hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 5px; }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 9px;
+      font-size: 0.95rem;
+      color: var(--text);
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .field select {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 38px;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23b8c5ff' d='M6 8 0 0h12z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+    .field select option { background: #1a1f3a; color: var(--text); }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      outline: none;
+      border-color: #667eea;
+      background-color: var(--input-focus-bg);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+    .field textarea { resize: vertical; min-height: 90px; }
+    .with-icon { position: relative; }
+    .with-icon .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .with-icon input { padding-left: 42px; }
+
+    /* ===== Action bar ===== */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+    .action-bar .btn-primary, .action-bar .btn-outline {
+      padding: 11px 24px;
+      font-size: 0.92rem;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .stat-mini {
+      padding: 18px 20px;
+      animation: fadeInUp 0.5s 0.2s ease backwards;
+    }
+    .stat-mini .label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .stat-mini .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stat-mini .value.gradient {
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+    [data-theme="light"] .stat-mini .value.gradient {
+      background: linear-gradient(135deg, #4338ca, #db2777);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-mini .meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .tip-card {
+      padding: 22px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.08)) !important;
+      border: 1px solid rgba(102, 126, 234, 0.2) !important;
+      animation: fadeInUp 0.5s 0.3s ease backwards;
+    }
+    [data-theme="light"] .tip-card {
+      background: linear-gradient(135deg, #eef2ff, #fdf2f8) !important;
+      border-color: #e0e7ff !important;
+    }
+    .tip-card .title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    .tip-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.55; }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/landing" class="back">← Back to Dashboard</a>
+</div>
+
+<div class="page-container">
+  <%
+    const fields = [user.fullName, user.branch, user.batchYear, user.cgpa, user.bio];
+    const filled = fields.filter(f => f !== undefined && f !== null && String(f).trim() !== '').length;
+    const completionPct = Math.round((filled / fields.length) * 100);
+    const initials = (user.fullName || user.email)
+      .split(/\s+/).filter(Boolean).slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('') || 'S';
+  %>
+
+  <div class="profile-layout">
+
+    <!-- Header -->
+    <div class="glass-card header-card">
+      <label for="photoInput" class="avatar" title="Click to change photo">
+        <% if (user.photo) { %>
+          <img class="avatar-img" src="<%= user.photo %>" alt="Profile photo">
+        <% } else { %>
+          <%= initials %>
+        <% } %>
+        <span class="avatar-edit" aria-hidden="true">📷</span>
+      </label>
+      <form action="/profile/photo" method="POST" enctype="multipart/form-data" id="photoForm" style="display:none;">
+        <input type="file" name="photo" id="photoInput" accept="image/*">
+      </form>
+
+      <div class="header-info">
+        <div class="name-row">
+          <h1><%= user.fullName || "Your Name" %></h1>
+          <span class="role-badge">🎓 Student</span>
+        </div>
+        <p class="email">📧 <%= user.email %></p>
+
+        <div class="photo-actions">
+          <button type="button" class="btn-link" onclick="document.getElementById('photoInput').click();">
+            📷 <%= user.photo ? 'Change photo' : 'Upload photo' %>
+          </button>
+          <% if (user.photo) { %>
+            <form action="/profile/photo/remove" method="POST"
+                  onsubmit="return confirm('Remove your profile photo?');">
+              <button type="submit" class="btn-link">🗑 Remove</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Auto-submit when a file is selected
+      document.getElementById('photoInput').addEventListener('change', () => {
+        const f = document.getElementById('photoInput').files[0];
+        if (!f) return;
+        if (f.size > 3 * 1024 * 1024) {
+          alert('Image is too large. Maximum allowed size is 3 MB.');
+          return;
+        }
+        document.getElementById('photoForm').submit();
+      });
+    </script>
+
+    <!-- Main column: completion + form -->
+    <div>
+      <div class="glass-card completion-card" style="margin-bottom:18px;">
+        <div class="row">
+          <span class="label">Profile Completion</span>
+          <span class="pct"><%= completionPct %>%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: <%= completionPct %>%;"></div></div>
+        <p class="hint">
+          <% if (completionPct < 100) { %>
+            ✨ Complete your profile to help alumni and recruiters know more about you.
+          <% } else { %>
+            🎉 Your profile is fully complete!
+          <% } %>
+        </p>
+      </div>
+
+      <form method="POST" action="/profile">
+
+        <!-- Personal info -->
+        <div class="glass-card form-section" style="margin-bottom:18px;">
+          <div class="section-head">
+            <div class="icon">👤</div>
+            <div>
+              <h3>Personal Information</h3>
+              <p>Basic details that appear on your profile</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" name="fullName" value="<%= user.fullName || '' %>" required placeholder="e.g. Santosh Mahapatra">
+          </div>
+
+          <div class="field">
+            <label>About / Bio</label>
+            <textarea name="bio" placeholder="Brief intro about yourself, interests, career goals..."><%= user.bio || '' %></textarea>
+            <div class="hint">A short paragraph helps alumni get to know you.</div>
+          </div>
+        </div>
+
+        <!-- Academic info -->
+        <div class="glass-card form-section" style="margin-bottom:18px;">
+          <div class="section-head">
+            <div class="icon">🎓</div>
+            <div>
+              <h3>Academic Information</h3>
+              <p>Your branch, batch, and academic performance</p>
+            </div>
+          </div>
+
+          <%
+            const branches = ['CSE','ELEC','ETC','MECH','MME','PROD','CHEM','CIVIL'];
+          %>
+          <div class="form-row">
+            <div class="field">
+              <label>Branch</label>
+              <select name="branch" required>
+                <option value="" disabled <%= !user.branch ? 'selected' : '' %>>Select branch</option>
+                <% branches.forEach(function(b) { %>
+                  <option value="<%= b %>" <%= user.branch === b ? 'selected' : '' %>><%= b %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="field">
+              <label>Batch Year (Graduation)</label>
+              <input type="number" name="batchYear" value="<%= user.batchYear || '' %>" placeholder="e.g. 2026">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Current CGPA</label>
+            <input
+              type="number"
+              step="0.01"
+              name="cgpa"
+              id="cgpaInput"
+              value="<%= user.cgpa || '' %>"
+              placeholder="e.g. 8.5"
+              min="0"
+              max="10"
+              inputmode="decimal"
+              title="Enter a value between 0 and 10">
+            <div class="hint">Out of 10. Maximum 2 decimal places (e.g. 8.75).</div>
+          </div>
+        </div>
+
+        <!-- Action bar -->
+        <div class="action-bar">
+          <a href="/landing" class="btn-outline">Cancel</a>
+          <button type="submit" class="btn-primary">Save Profile</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar-col">
+      <div class="glass-card stat-mini">
+        <div class="label">CGPA</div>
+        <div class="value gradient"><%= user.cgpa || '—' %></div>
+        <div class="meta">
+          <% if (user.cgpa) { %>
+            <% if (user.cgpa >= 8.5) { %>🌟 Excellent
+            <% } else if (user.cgpa >= 7) { %>👍 Good
+            <% } else { %>📚 Keep going
+            <% } %>
+          <% } else { %>
+            Add to track
+          <% } %>
+        </div>
+      </div>
+
+      <div class="glass-card stat-mini">
+        <div class="label">Branch</div>
+        <div class="value"><%= user.branch || '—' %></div>
+        <div class="meta"><%= user.batchYear ? "Batch of " + user.batchYear : "Update branch" %></div>
+      </div>
+
+      <div class="glass-card stat-mini">
+        <div class="label">Account Type</div>
+        <div class="value">🎓 Student</div>
+        <div class="meta">Member since 2026</div>
+      </div>
+
+      <div class="glass-card tip-card">
+        <div class="title">💡 Pro Tip</div>
+        <p>A complete profile gets <strong>3× more alumni connections</strong>. Add your branch, batch, and a short bio to stand out.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ===== CGPA range guard (0–10) =====
+   - Live-clamps as the user types or pastes.
+   - Shows an inline error and blocks form submission if out of range.
+*/
+(function () {
+  const input = document.getElementById('cgpaInput');
+  if (!input) return;
+  const form = input.closest('form');
+  const hint = input.nextElementSibling; // .hint div
+  const originalHint = hint ? hint.textContent : '';
+
+  function countDecimals(str) {
+    const m = str.match(/\.(\d+)/);
+    return m ? m[1].length : 0;
+  }
+
+  function clampAndValidate() {
+    const raw = input.value.trim();
+    if (raw === '') {
+      input.style.borderColor = '';
+      if (hint) { hint.textContent = originalHint; hint.style.color = ''; }
+      input.setCustomValidity('');
+      return true;
+    }
+    let v = parseFloat(raw);
+    if (Number.isNaN(v)) {
+      input.setCustomValidity('Enter a number between 0 and 10');
+      input.style.borderColor = '#e74c3c';
+      if (hint) { hint.textContent = '⚠ Enter a number between 0 and 10'; hint.style.color = '#ff8a80'; }
+      return false;
+    }
+
+    let warn = '';
+    if (v > 10) { v = 10; warn = '⚠ CGPA capped at 10.'; }
+    if (v < 0)  { v = 0;  warn = '⚠ CGPA capped at 0.'; }
+    // Enforce max 2 decimal places — round and reflect
+    if (countDecimals(String(v)) > 2) {
+      v = Math.round(v * 100) / 100;
+      warn = warn || '⚠ Only up to 2 decimal places allowed.';
+    }
+    // Also catch the typed string having >2 decimals even if v already fits
+    if (countDecimals(raw) > 2 && !warn) {
+      v = Math.round(v * 100) / 100;
+      warn = '⚠ Only up to 2 decimal places allowed.';
+    }
+
+    const fixed = (Math.round(v * 100) / 100).toString();
+    if (fixed !== raw) input.value = fixed;
+
+    if (warn) {
+      input.style.borderColor = '#e74c3c';
+      if (hint) { hint.textContent = warn; hint.style.color = '#ff8a80'; }
+    } else {
+      input.style.borderColor = '';
+      if (hint) { hint.textContent = originalHint; hint.style.color = ''; }
+    }
+    input.setCustomValidity('');
+    return true;
+  }
+
+  // Block typing a 3rd decimal digit before it appears
+  input.addEventListener('keydown', (e) => {
+    if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return; // allow nav / copy / paste
+    if (!/[0-9.]/.test(e.key)) return;                                     // let the browser handle other keys
+    const start = input.selectionStart, end = input.selectionEnd;
+    const next = input.value.slice(0, start) + e.key + input.value.slice(end);
+    if (countDecimals(next) > 2) e.preventDefault();
+  });
+
+  input.addEventListener('input', clampAndValidate);
+  input.addEventListener('blur', clampAndValidate);
+  input.addEventListener('paste', () => setTimeout(clampAndValidate, 0));
+
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      const v = parseFloat(input.value);
+      if (!Number.isNaN(v) && (v < 0 || v > 10)) {
+        e.preventDefault();
+        clampAndValidate();
+        input.focus();
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

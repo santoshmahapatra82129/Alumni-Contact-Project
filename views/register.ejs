@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register | IGIT Connect</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/js/theme.js" defer></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e27;
+            color: #e8eaf6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+        .glow {
+            position: fixed;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .glow-1 { background: rgba(102, 126, 234, 0.4); top: -150px; right: -150px; }
+        .glow-2 { background: rgba(240, 147, 251, 0.3); bottom: -150px; left: -150px; }
+
+        .top-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+        }
+        .top-bar a.back {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .top-bar a.back:hover { color: #fff; }
+
+        .wrapper {
+            position: relative;
+            z-index: 5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px 20px 40px;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px 35px;
+            width: 100%;
+            max-width: 440px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.6s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .register-container h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #fff 0%, #b8c5ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+
+        .role-group { display: flex; gap: 10px; margin-bottom: 18px; }
+        .role-option {
+            flex: 1;
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            color: #cbd5e1;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+        .role-option input { display: none; }
+        .role-option:hover { border-color: rgba(102, 126, 234, 0.5); color: #fff; }
+        .role-option.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.15);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .register-container input[type="email"],
+        .register-container input[type="password"],
+        .register-container input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        .register-container input::placeholder { color: #64748b; }
+        .register-container input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.08);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .register-container button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            margin-top: 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        .register-container button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5);
+        }
+
+        .register-container p {
+            margin-top: 22px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        .register-container a {
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        .register-container a:hover { opacity: 0.8; }
+
+        /* ===== Password strength UI ===== */
+        .pw-wrap { position: relative; }
+        .register-container .pw-wrap input[type="password"],
+        .register-container .pw-wrap input[type="text"] {
+            padding-right: 64px;   /* room for the Show/Hide button */
+        }
+        .register-container .pw-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: auto;
+            margin: 0;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: .8rem;
+            font-weight: 600;
+            line-height: 1;
+            box-shadow: none;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .register-container .pw-toggle:hover {
+            color: #b8c5ff;
+            background: rgba(102,126,234,.10);
+            border-color: rgba(102,126,234,.45);
+            transform: translateY(-50%);
+        }
+        .pw-meter {
+            display: flex; gap: 4px; margin: 4px 4px 6px;
+        }
+        .pw-meter span {
+            flex: 1; height: 5px; border-radius: 3px;
+            background: rgba(255,255,255,.06);
+            transition: background .25s;
+        }
+        .pw-meter[data-score="1"] span:nth-child(-n+1) { background: #ef4444; }
+        .pw-meter[data-score="2"] span:nth-child(-n+2) { background: #f97316; }
+        .pw-meter[data-score="3"] span:nth-child(-n+3) { background: #eab308; }
+        .pw-meter[data-score="4"] span:nth-child(-n+4) { background: #22c55e; }
+        .pw-meter[data-score="5"] span:nth-child(-n+5) { background: #10b981; }
+        .pw-label {
+            font-size: .78rem; margin: 0 4px 6px;
+            color: #94a3b8;
+        }
+        .pw-label b { font-weight: 700; }
+        .pw-label.s1 b { color: #ef4444; }
+        .pw-label.s2 b { color: #f97316; }
+        .pw-label.s3 b { color: #eab308; }
+        .pw-label.s4 b { color: #22c55e; }
+        .pw-label.s5 b { color: #10b981; }
+        .pw-checks {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 14px;
+            margin: 4px 4px 6px;
+            font-size: .78rem;
+            color: #94a3b8;
+        }
+        .pw-check { display: flex; align-items: center; gap: 6px; transition: color .2s; }
+        .pw-check::before {
+            content: '○';
+            color: #475569;
+            font-size: .9rem;
+            transition: color .2s, content .2s;
+        }
+        .pw-check.ok { color: #b8c5ff; }
+        .pw-check.ok::before { content: '✓'; color: #22c55e; }
+    </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="top-bar">
+    <a href="/" class="logo">🎓 IGIT Connect</a>
+    <a href="/" class="back">← Back to home</a>
+</div>
+
+<div class="wrapper">
+    <div class="register-container">
+        <h2>Create Account</h2>
+        <p class="subtitle">Join the IGIT Sarang placement community</p>
+
+        <form method="POST" action="/register">
+            <div class="role-group">
+                <label class="role-option active">
+                    <input type="radio" name="role" value="student" required checked>
+                    🎓 Student
+                </label>
+                <label class="role-option">
+                    <input type="radio" name="role" value="alumni">
+                    💼 Alumni
+                </label>
+            </div>
+            <input type="text" name="fullName" placeholder="Full name" required>
+            <input type="email" name="email" id="regEmail" placeholder="Email address" required>
+            <small id="regEmailHint" style="display:block;margin:-2px 4px 6px;color:#94a3b8;font-size:.8rem;">
+                🎓 Students must register with <strong style="color:#b8c5ff;">@igitsarang.ac.in</strong>
+            </small>
+            <div class="pw-wrap">
+                <input type="password" name="password" id="pw" placeholder="Password (min 8 chars)" required minlength="8" autocomplete="new-password">
+                <button type="button" class="pw-toggle" id="pwToggle" tabindex="-1" aria-label="Show password">Show</button>
+            </div>
+            <div class="pw-meter" id="pwMeter" data-score="0">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="pw-label" id="pwLabel">Password strength: <b>—</b></div>
+            <div class="pw-checks" id="pwChecks">
+                <div class="pw-check" data-rule="len">8+ characters</div>
+                <div class="pw-check" data-rule="upper">Uppercase letter</div>
+                <div class="pw-check" data-rule="lower">Lowercase letter</div>
+                <div class="pw-check" data-rule="digit">Number</div>
+                <div class="pw-check" data-rule="special">Special character</div>
+                <div class="pw-check" data-rule="long">12+ chars (bonus)</div>
+            </div>
+
+            <button type="submit" id="registerBtn">Register →</button>
+        </form>
+
+        <p>Already have an account?
+            <a href="/login">Login here</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    const regEmail = document.getElementById('regEmail');
+    const regEmailHint = document.getElementById('regEmailHint');
+    const STUDENT_DOMAIN = '@igitsarang.ac.in';
+    function syncRegGuard() {
+        const role = document.querySelector('input[name="role"]:checked').value;
+        if (role === 'student') {
+            regEmail.setAttribute('pattern', '.+' + STUDENT_DOMAIN.replace(/\./g, '\\.') + '$');
+            regEmail.title = 'Student emails must end with ' + STUDENT_DOMAIN;
+            regEmailHint.style.display = 'block';
+        } else {
+            regEmail.removeAttribute('pattern');
+            regEmail.title = '';
+            regEmailHint.style.display = 'none';
+        }
+    }
+    document.querySelectorAll('input[name="role"]').forEach(r => {
+        r.addEventListener('change', () => {
+            document.querySelectorAll('.role-option').forEach(l => l.classList.remove('active'));
+            if (r.checked) r.parentElement.classList.add('active');
+            syncRegGuard();
+        });
+    });
+    syncRegGuard();
+
+    /* ===== Password strength + show/hide ===== */
+    (function () {
+        const pw = document.getElementById('pw');
+        const meter = document.getElementById('pwMeter');
+        const label = document.getElementById('pwLabel');
+        const checks = document.getElementById('pwChecks');
+        const toggle = document.getElementById('pwToggle');
+        const btn = document.getElementById('registerBtn');
+        const form = pw.closest('form');
+
+        const COMMON_BAD = new Set([
+            '12345678','password','qwerty123','11111111','iloveyou',
+            'admin123','password1','letmein123','welcome1','abc12345'
+        ]);
+
+        toggle.addEventListener('click', () => {
+            const showing = pw.type === 'text';
+            pw.type = showing ? 'password' : 'text';
+            toggle.textContent = showing ? 'Show' : 'Hide';
+        });
+
+        function evaluate(v) {
+            const r = {
+                len:     v.length >= 8,
+                upper:   /[A-Z]/.test(v),
+                lower:   /[a-z]/.test(v),
+                digit:   /\d/.test(v),
+                special: /[^A-Za-z0-9]/.test(v),
+                long:    v.length >= 12,
+            };
+            // raw score 0..6
+            let raw = Object.values(r).filter(Boolean).length;
+            // hard penalties
+            if (COMMON_BAD.has(v.toLowerCase())) raw = Math.min(raw, 1);
+            if (/^(.)\1+$/.test(v) && v.length > 0) raw = 1; // all same char
+            if (/^(0123|1234|2345|3456|4567|5678|6789|abcd|qwer|asdf)/i.test(v)) raw = Math.min(raw, 2);
+            // map to bar score 1..5
+            const score = v.length === 0 ? 0
+                : raw <= 2 ? 1
+                : raw === 3 ? 2
+                : raw === 4 ? 3
+                : raw === 5 ? 4
+                : 5;
+            return { rules: r, score };
+        }
+
+        const labels = ['—','Very weak','Weak','Fair','Strong','Excellent'];
+        function paint() {
+            const v = pw.value;
+            const { rules, score } = evaluate(v);
+            meter.dataset.score = score;
+            label.className = 'pw-label s' + score;
+            label.innerHTML = 'Password strength: <b>' + labels[score] + '</b>';
+            checks.querySelectorAll('.pw-check').forEach(el => {
+                const ok = !!rules[el.dataset.rule];
+                el.classList.toggle('ok', ok);
+            });
+            // The five required rules (excluding the bonus "long")
+            const required = rules.len && rules.upper && rules.lower && rules.digit && rules.special;
+            if (v.length === 0) {
+                pw.setCustomValidity('');
+            } else if (!required) {
+                pw.setCustomValidity('Password must be 8+ chars with upper, lower, number, and special character.');
+            } else {
+                pw.setCustomValidity('');
+            }
+        }
+
+        pw.addEventListener('input', paint);
+        pw.addEventListener('blur', paint);
+        paint();
+
+        form.addEventListener('submit', (e) => {
+            const { rules } = evaluate(pw.value);
+            const ok = rules.len && rules.upper && rules.lower && rules.digit && rules.special;
+            if (!ok) {
+                e.preventDefault();
+                pw.focus();
+                paint();
+            }
+        });
+    })();
+
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    const particleCount = 800;
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 25;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 25;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 25;
+        const m = Math.random();
+        colors[i * 3] = 0.4 + m * 0.6;
+        colors[i * 3 + 1] = 0.5 + m * 0.4;
+        colors[i * 3 + 2] = 0.9;
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    const points = new THREE.Points(geom, new THREE.PointsMaterial({
+        size: 0.04, vertexColors: true, transparent: true, opacity: 0.7
+    }));
+    scene.add(points);
+    if (window.IGITTheme) window.IGITTheme.bind(points);
+
+    const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.5, 24, 24),
+        new THREE.MeshBasicMaterial({ color: 0xf093fb, wireframe: true, transparent: true, opacity: 0.15 })
+    );
+    sphere.position.set(5, -2, -3);
+    scene.add(sphere);
+    if (window.IGITTheme) window.IGITTheme.bindMesh(sphere, { dark: 0xf093fb, light: 0xdb2777 }, { dark: 0.15, light: 0.18 });
+
+    camera.position.z = 6;
+
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', e => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.y += 0.0008;
+        points.rotation.x += 0.0003;
+        sphere.rotation.x += 0.003;
+        sphere.rotation.y += 0.004;
+        camera.position.x += (mouseX * 0.3 - camera.position.x) * 0.04;
+        camera.position.y += (mouseY * 0.3 - camera.position.y) * 0.04;
+        camera.lookAt(scene.position);
+        renderer.render(scene, camera);
+    }
+    animate();
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title><%= template.name %> | IGIT Connect</title>
+  <%- include('partials/theme-head') %>
+  <style>
+    .tpl-wrap { max-width: 1000px; margin: auto; }
+    .tpl-header {
+      padding: 32px 30px;
+      margin-bottom: 22px;
+      animation: fadeInUp 0.5s ease;
+    }
+    .tpl-header h1 {
+      font-size: 1.9rem;
+      background: linear-gradient(135deg, #fff, #b8c5ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    .tpl-header p { color: #cbd5e1; line-height: 1.5; margin-bottom: 8px; }
+    .tpl-header .best-for { color: #b8c5ff; font-size: 0.9rem; }
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .info-tip {
+      padding: 14px 20px;
+      background: rgba(102, 126, 234, 0.08);
+      border: 1px solid rgba(102, 126, 234, 0.25);
+      border-radius: 12px;
+      color: #b8c5ff;
+      margin: 18px 0;
+      font-size: 0.9rem;
+    }
+    .info-tip a { color: #f093fb; text-decoration: none; font-weight: bold; }
+
+    pre.code-box {
+      background: #060920;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      color: #d4d4d4;
+      padding: 22px;
+      border-radius: 14px;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    pre.code-box::-webkit-scrollbar { width: 8px; height: 8px; }
+    pre.code-box::-webkit-scrollbar-thumb { background: rgba(102, 126, 234, 0.4); border-radius: 4px; }
+
+    .toast {
+      position: fixed;
+      top: 80px;
+      right: 25px;
+      background: rgba(46, 213, 115, 0.15);
+      border: 1px solid rgba(46, 213, 115, 0.4);
+      color: #6fffaa;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-weight: bold;
+      backdrop-filter: blur(15px);
+      display: none;
+      z-index: 100;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #00c853, #2e7d32);
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 200, 83, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+<%- include('partials/theme-bg') %>
+
+<div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/resources/resume" class="back">← All Templates</a>
+</div>
+
+<div class="page-container">
+  <div class="tpl-wrap">
+
+    <div class="glass-card tpl-header">
+      <h1><%= template.name %></h1>
+      <p><%= template.description %></p>
+      <p class="best-for"><strong style="color:#fff;">Best for:</strong> <%= template.bestFor %></p>
+
+      <div class="info-tip">
+        💡 Copy this LaTeX → paste into <a href="https://www.overleaf.com" target="_blank">Overleaf</a> → edit your details → compile to PDF.
+      </div>
+
+      <div class="actions">
+        <button class="btn-success" onclick="copyCode()">📋 Copy LaTeX Code</button>
+        <a href="/resources/resume/<%= template.id %>/download" class="btn-primary">⬇ Download .tex</a>
+        <a href="/resources/resume" class="btn-outline">← Back</a>
+      </div>
+    </div>
+
+    <pre class="code-box" id="latex-code"><%= template.latex %></pre>
+
+  </div>
+</div>
+
+<script>
+  function copyCode() {
+    const code = document.getElementById('latex-code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      const t = document.getElementById('toast');
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2200);
+    });
+  }
+</script>
+
+</body>
+</html>

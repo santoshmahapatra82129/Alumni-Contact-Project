@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Companies | IGIT Connect</title>
+  <link rel="stylesheet" href="/css/theme.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="/js/theme.js" defer></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0e27;
+      color: #e8eaf6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    #three-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+    .glow {
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      filter: blur(120px);
+      z-index: 1;
+      pointer-events: none;
+    }
+    .glow-1 { background: rgba(102, 126, 234, 0.3); top: -150px; left: -100px; }
+    .glow-2 { background: rgba(240, 147, 251, 0.25); bottom: -150px; right: -100px; }
+
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 14, 39, 0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      z-index: 50;
+    }
+    .topbar .logo {
+      font-size: 1.25rem;
+      font-weight: bold;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-decoration: none;
+    }
+    .topbar a.back {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .topbar a.back:hover { color: #fff; }
+
+    .container {
+      position: relative;
+      z-index: 5;
+      padding: 100px 30px 60px;
+      max-width: 1300px;
+      margin: auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 50px;
+      animation: fadeInUp 0.6s ease;
+    }
+    .header h1 {
+      font-size: 2.8rem;
+      background: linear-gradient(135deg, #fff 0%, #b8c5ff 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 12px;
+    }
+    .header p {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 22px;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.4s;
+      position: relative;
+      animation: fadeInUp 0.5s ease backwards;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.10s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.20s; }
+    .card:nth-child(5) { animation-delay: 0.25s; }
+    .card:nth-child(6) { animation-delay: 0.30s; }
+    .card:nth-child(7) { animation-delay: 0.35s; }
+    .card:nth-child(8) { animation-delay: 0.40s; }
+    .card:nth-child(9) { animation-delay: 0.45s; }
+    .card:nth-child(10) { animation-delay: 0.50s; }
+    .card:nth-child(11) { animation-delay: 0.55s; }
+    .card:nth-child(12) { animation-delay: 0.60s; }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.08), transparent);
+      transition: left 0.6s;
+      pointer-events: none;
+    }
+    .card:hover::before { left: 100%; }
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.25);
+    }
+
+    .logo-wrap {
+      width: 100%;
+      height: 160px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+    .logo-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .logo-fallback {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      font-size: 2.5rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0; left: 0;
+    }
+    .visit-year {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(10, 14, 39, 0.85);
+      color: #b8c5ff;
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      backdrop-filter: blur(10px);
+      z-index: 2;
+    }
+
+    .card-body {
+      padding: 18px 20px 22px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-body h3 {
+      color: #fff;
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+    }
+    .short-desc {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      flex: 1;
+      line-height: 1.5;
+    }
+    .branches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+    }
+    .branch-tag {
+      background: rgba(102, 126, 234, 0.15);
+      color: #b8c5ff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(102, 126, 234, 0.25);
+    }
+    .cta {
+      margin-top: 14px;
+      color: #b8c5ff;
+      font-weight: bold;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cta::after {
+      content: '→';
+      transition: transform 0.3s;
+    }
+    .card:hover .cta::after { transform: translateX(5px); }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 600px) {
+      .header h1 { font-size: 2rem; }
+      .container { padding: 90px 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="topbar">
+  <a href="/landing" class="logo">🎓 IGIT Connect</a>
+  <a href="/landing" class="back">← Back to Dashboard</a>
+</div>
+
+<div class="container">
+  <div class="header">
+    <h1>Companies That Visited Our Campus</h1>
+    <p>Browse companies that recruited from IGIT Sarang. Click any card to see eligibility, interview rounds, and student experiences.</p>
+  </div>
+
+  <div class="grid">
+    <% companies.forEach((company) => { %>
+      <a href="/companies/<%= company._id %>" class="card">
+        <div class="logo-wrap">
+          <% if (company.companyImage) { %>
+            <img src="<%= company.companyImage %>" alt="<%= company.companyName %>"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback" style="display:none;"><%= company.companyName.charAt(0) %></div>
+          <% } else { %>
+            <div class="logo-fallback"><%= company.companyName.charAt(0) %></div>
+          <% } %>
+          <% if (company.visitYear) { %>
+            <div class="visit-year"><%= company.visitYear %></div>
+          <% } %>
+        </div>
+        <div class="card-body">
+          <h3><%= company.companyName %></h3>
+          <p class="short-desc"><%= company.shortDescription %></p>
+          <div class="branches">
+            <% company.eligibility.branchAllowed.slice(0, 4).forEach(branch => { %>
+              <span class="branch-tag"><%= branch %></span>
+            <% }) %>
+          </div>
+          <div class="cta">View details</div>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('three-canvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  const particleCount = 800;
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 30;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 30;
+    const m = Math.random();
+    colors[i * 3] = 0.4 + m * 0.6;
+    colors[i * 3 + 1] = 0.5 + m * 0.4;
+    colors[i * 3 + 2] = 0.9;
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const points = new THREE.Points(geom, new THREE.PointsMaterial({
+    size: 0.04, vertexColors: true, transparent: true, opacity: 0.5
+  }));
+  scene.add(points);
+  if (window.IGITTheme) window.IGITTheme.bind(points);
+  camera.position.z = 8;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    points.rotation.y += 0.0005;
+    renderer.render(scene, camera);
+  }
+  animate();
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+
+</body>
+</html>
