@@ -601,7 +601,18 @@ app.get("/logout", (req, res, next) => {
 });
 
 // Landing page
-app.get("/landing", isLoggedIn, (req, res) => res.render("landing", { user: req.user }));
+app.get("/landing", isLoggedIn, async (req, res) => {
+  const [companiesCount, questionsCount] = await Promise.all([
+    Company.countDocuments(),
+    Question.countDocuments()
+  ]);
+  const resumeCount = require("./resumeTemplates").length;
+  const mockTestCount = require("./mockTests").TESTS.length;
+  res.render("landing", {
+    user: req.user,
+    stats: { companiesCount, questionsCount, resumeCount, mockTestCount }
+  });
+});
 
 // Profile (role-based)
 app.get("/profile", isLoggedIn, (req, res) => {

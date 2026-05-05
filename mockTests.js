@@ -5,12 +5,12 @@
 // The slice is deterministic per test so the same test always shows the
 // same 45 questions.
 
-// Each pool has 25 questions (indices 0..24). Five tests per difficulty
-// pick a 15-index window starting at offsets 0, 2, 5, 7, 10 (mod 25)
-// so the five tests overlap but feel distinct.
-const SLICE_OFFSETS = [0, 2, 5, 7, 10];
+// Each pool has 75 questions (indices 0..74). Five tests per difficulty
+// pick a non-overlapping 15-index window so all 5 tests at the same
+// difficulty have COMPLETELY DIFFERENT questions in every category.
+const SLICE_OFFSETS = [0, 15, 30, 45, 60];
 const SLICE_SIZE = 15;
-const POOL_SIZE = 25;
+const POOL_SIZE = 75;
 
 function pickIndices(offset) {
   const out = [];

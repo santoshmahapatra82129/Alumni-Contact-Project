@@ -157,32 +157,60 @@
 
         /* Welcome banner */
         .welcome {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.12));
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.18), rgba(240, 147, 251, 0.13));
+            border: 1px solid rgba(255, 255, 255, 0.10);
             border-radius: 18px;
-            padding: 32px 36px;
-            margin-bottom: 30px;
+            padding: 30px 34px;
+            margin-bottom: 28px;
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             animation: fadeInUp 0.6s ease;
         }
         .welcome::before {
             content: '';
             position: absolute;
-            top: -50px; right: -50px;
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(102, 126, 234, 0.3), transparent);
+            top: -60px; right: -60px;
+            width: 220px; height: 220px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.35), transparent 70%);
             border-radius: 50%;
+            pointer-events: none;
+        }
+        .welcome::after {
+            content: '';
+            position: absolute;
+            bottom: -50px; left: 30%;
+            width: 180px; height: 180px;
+            background: radial-gradient(circle, rgba(240, 147, 251, 0.20), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
         }
         .welcome h1 {
-            font-size: 2rem;
+            font-size: 1.85rem;
+            line-height: 1.2;
             margin-bottom: 6px;
             background: linear-gradient(135deg, #fff, #b8c5ff);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            letter-spacing: -0.5px;
         }
-        .welcome p { color: #cbd5e1; font-size: 1rem; }
+        .welcome p { color: #cbd5e1; font-size: 0.98rem; }
+        .welcome .chips {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-top: 14px;
+        }
+        .welcome .chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.10);
+            color: #cbd5e1;
+        }
+        .welcome .chip b { color: #b8c5ff; font-weight: 700; }
 
         /* Quick actions grid */
         .section-title {
@@ -254,25 +282,73 @@
         /* Stats row */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 16px;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 1100px) {
+            .stats-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 700px) {
+            .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         .stat-card {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 20px;
+            padding: 18px 20px;
             border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 120px;
+            transition: transform .25s, border-color .25s, box-shadow .25s;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
         }
-        .stat-card .label { color: #94a3b8; font-size: 0.85rem; }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(102,126,234,0.45);
+            box-shadow: 0 12px 28px rgba(102,126,234,0.18);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(102,126,234,0.35), transparent 70%);
+            transform: translate(-30%, -30%);
+            pointer-events: none;
+        }
+        .stat-card .label {
+            color: #94a3b8;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
         .stat-card .value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-top: 6px;
-            background: linear-gradient(135deg, #667eea, #f093fb);
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.05;
+            margin: 8px 0 4px;
+            background: linear-gradient(135deg, #b8c5ff, #f093fb);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .stat-card .value.compact { font-size: 1.4rem; letter-spacing: 0; }
+        .stat-card .sub {
+            color: #64748b;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Toast */
@@ -378,30 +454,51 @@
     <!-- Main -->
     <main class="main">
 
+        <%
+          const s = (typeof stats !== 'undefined' && stats) ? stats : {};
+          const companiesCount = s.companiesCount || 0;
+          const questionsCount = s.questionsCount || 0;
+          const resumeCount    = s.resumeCount    || 0;
+          const mockTestCount  = s.mockTestCount  || 0;
+        %>
+
         <div class="welcome">
             <h1>Welcome back, <%= (user.fullName || user.email.split('@')[0]) %>! 👋</h1>
-            <p>Here's your placement prep dashboard. Pick where you want to continue.</p>
+            <p>Your placement-prep dashboard — pick where you want to continue.</p>
+            <div class="chips">
+                <span class="chip">🏢 <b><%= companiesCount %></b> companies</span>
+                <span class="chip">🧪 <b><%= mockTestCount %></b> mock tests</span>
+                <span class="chip">📝 <b><%= questionsCount %></b> questions</span>
+                <span class="chip">📄 <b><%= resumeCount %></b> resume templates</span>
+            </div>
         </div>
 
         <!-- Stats -->
         <div class="stats-row">
             <div class="stat-card">
-                <div class="label">Companies on Platform</div>
-                <div class="value">11</div>
+                <div class="label">Companies</div>
+                <div class="value"><%= companiesCount %></div>
+                <div class="sub">tracked on platform</div>
             </div>
             <div class="stat-card">
-                <div class="label">Aptitude Questions</div>
-                <div class="value">10+</div>
+                <div class="label">Mock Tests</div>
+                <div class="value"><%= mockTestCount %></div>
+                <div class="sub">5 Easy · 5 Moderate · 5 Hard</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Question Bank</div>
+                <div class="value"><%= questionsCount %></div>
+                <div class="sub">aptitude · english · CSE</div>
             </div>
             <div class="stat-card">
                 <div class="label">Resume Templates</div>
-                <div class="value">10</div>
+                <div class="value"><%= resumeCount %></div>
+                <div class="sub">LaTeX · downloadable</div>
             </div>
             <div class="stat-card">
-                <div class="label">Account Type</div>
-                <div class="value" style="font-size:1.3rem;">
-                    <%= user.role === "alumni" ? "Alumni" : "Student" %>
-                </div>
+                <div class="label">Account</div>
+                <div class="value compact"><%= user.role === "alumni" ? "Alumni" : "Student" %></div>
+                <div class="sub"><%= user.email %></div>
             </div>
         </div>
 
@@ -411,19 +508,19 @@
             <a href="/companies" class="action-card">
                 <span class="action-icon">🏢</span>
                 <h3>Explore Companies</h3>
-                <p>Browse 11 companies that visited campus. See eligibility, rounds, and alumni POCs.</p>
+                <p>Browse <%= companiesCount %> companies that visited campus. See eligibility, rounds, and alumni POCs.</p>
                 <div class="arrow">View companies →</div>
             </a>
             <a href="/mock-test" class="action-card">
                 <span class="action-icon">🧪</span>
                 <h3>Mock Test</h3>
-                <p>15 timed mock tests across Easy / Moderate / Hard. Each with 45 questions covering Aptitude, English & CSE Core.</p>
+                <p><%= mockTestCount %> timed mock tests across Easy / Moderate / Hard. Each with 45 questions covering Aptitude, English &amp; CSE Core.</p>
                 <div class="arrow">Start test →</div>
             </a>
             <a href="/resources/resume" class="action-card">
                 <span class="action-icon">📄</span>
                 <h3>Resume Templates</h3>
-                <p>10 ATS-friendly LaTeX templates. Copy or download .tex instantly.</p>
+                <p><%= resumeCount %> ATS-friendly LaTeX templates. Copy or download .tex instantly.</p>
                 <div class="arrow">Browse templates →</div>
             </a>
             <a href="/resources" class="action-card">
